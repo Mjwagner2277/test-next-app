@@ -1,0 +1,19 @@
+# Keep local dependencies out of the Docker build context. The image installs
+# dependencies from package-lock.json inside the deps stage instead.
+node_modules
+
+# Build outputs are regenerated inside the Docker builder stage.
+.next
+dist
+
+# Local env files should not be baked into images. Pass runtime config with
+# docker run --env or your deployment platform instead.
+.env
+.env.*
+!.env.example
+
+# Local/editor noise that should not affect Docker layer hashes.
+.DS_Store
+*.log
+.git
+.gitignore

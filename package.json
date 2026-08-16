@@ -1,0 +1,34 @@
+{
+  "name": "test-next-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "proto:gen": "buf generate",
+    "dev": "next dev",
+    "build": "next build",
+    "lint": "oxlint",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@bufbuild/protobuf": "^2.13.0",
+    "@connectrpc/connect": "^2.1.2",
+    "@connectrpc/connect-web": "^2.1.2",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^9.3.1",
+    "@mui/material": "^9.3.1",
+    "next": "^16.3.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@bufbuild/buf": "^1.72.0",
+    "@bufbuild/protoc-gen-es": "^2.13.0",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "oxlint": "^1.75.0",
+    "typescript": "~6.0.2"
+  }
+}

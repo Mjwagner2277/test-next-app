@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "test-next-app.fullname" . }}-envoy
+  labels:
+    {{- include "test-next-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: envoy
+spec:
+  replicas: {{ .Values.envoy.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "test-next-app.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: envoy
+  template:
+    metadata:
+      labels:
+        {{- include "test-next-app.labels" . | nindent 8 }}
+        app.kubernetes.io/component: envoy
+    spec:
+      containers:
+        - name: envoy
+          image: "{{ .Values.envoy.image.repository }}:{{ .Values.envoy.image.tag }}"
+          imagePullPolicy: {{ .Values.envoy.image.pullPolicy }}
+          args:
+            - -c
+            - /etc/envoy/envoy.yaml
+            - --log-level
+            - info
+          ports:
+            - name: grpc-web
+              containerPort: 8080
+{{ if .Values.envoy.admin.enabled }}
+            - name: admin
+              containerPort: {{ .Values.envoy.admin.port }}
+{{ end }}
+          volumeMounts:
+            - name: envoy-config
+              mountPath: /etc/envoy/envoy.yaml
+              subPath: envoy.yaml
+              readOnly: true
+      volumes:
+        - name: envoy-config
+          configMap:
+            name: {{ include "test-next-app.fullname" . }}-envoy

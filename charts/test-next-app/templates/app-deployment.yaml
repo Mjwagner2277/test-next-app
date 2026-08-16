@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "test-next-app.fullname" . }}-app
+  labels:
+    {{- include "test-next-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: app
+spec:
+  replicas: {{ .Values.app.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "test-next-app.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: app
+  template:
+    metadata:
+      labels:
+        {{- include "test-next-app.labels" . | nindent 8 }}
+        app.kubernetes.io/component: app
+    spec:
+      containers:
+        - name: next-app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            # The Next.js API route reads this runtime value and returns it to
+            # the browser from /api/grpc-config.
+            - name: GRPC_WEB_PROXY_URL
+              value: {{ .Values.grpcWebProxyUrl | quote }}
+            # This is exposed to the browser by /api/grpc-config. Use only for
+            # public/demo tokens, not private server credentials.
+            - name: GRPC_AUTH_TOKEN
+              value: {{ .Values.grpcAuthToken | quote }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

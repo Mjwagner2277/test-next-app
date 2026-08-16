@@ -1,0 +1,13 @@
+version: v2
+
+# Buf linting checks that proto names, packages, and file layout follow common
+# protobuf conventions before code is generated.
+lint:
+  use:
+    - STANDARD
+
+# Breaking checks help catch contract changes that would break existing clients
+# once this service definition is versioned in source control.
+breaking:
+  use:
+    - FILE

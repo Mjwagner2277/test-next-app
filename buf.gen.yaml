@@ -1,0 +1,13 @@
+version: v2
+
+# Remove old generated files before writing new ones. This prevents stale
+# TypeScript from hanging around after proto messages or methods are renamed.
+clean: true
+
+plugins:
+  # protoc-gen-es turns the .proto service/messages into TypeScript descriptors
+  # used by ConnectRPC in src/grpc/controlPanelClient.ts.
+  - local: protoc-gen-es
+    out: src/gen
+    opt:
+      - target=ts

@@ -1,0 +1,46 @@
+# Image for the Next.js app built from the Dockerfile at the repo root.
+image:
+  repository: test-next-app
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Public URL the browser uses for gRPC-Web calls. In this chart, Envoy is
+# exposed as a separate Service, so this should point at Envoy's reachable URL.
+grpcWebProxyUrl: http://localhost:8080
+
+# This value is returned to the browser by /api/grpc-config. Leave empty unless
+# it is safe for end users to inspect.
+grpcAuthToken: ""
+
+# Native gRPC server reached by Envoy. In Kubernetes this is usually a Service
+# DNS name, for example: control-panel-api.default.svc.cluster.local.
+upstreamGrpc:
+  host: control-panel-grpc.default.svc.cluster.local
+  port: 9090
+
+app:
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 3000
+
+envoy:
+  image:
+    repository: envoyproxy/envoy
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8080
+  cors:
+    # These are the browser origins allowed to call Envoy. The localhost
+    # defaults support kubectl port-forward during review.
+    allowedOriginPrefixes:
+      - http://localhost
+      - http://127.0.0.1
+  admin:
+    enabled: false
+    port: 9901
+
+resources: {}

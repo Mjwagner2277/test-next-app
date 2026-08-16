@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+// The package becomes part of the generated TypeScript names and the full gRPC
+// method paths. Keep it stable once clients and servers depend on it.
+package controlpanel.v1;
+
+// This service is the contract shared by the UI and the gRPC server. The React
+// app never hand-builds URLs for these calls; ConnectRPC uses this generated
+// service descriptor to know each method name and request/response type.
+service ControlPanelService {
+  // Empty request because "status" does not need user input.
+  rpc GetStatus(GetStatusRequest) returns (StatusResponse);
+
+  // Uses a job id from the UI to start a specific server-side job.
+  rpc StartJob(StartJobRequest) returns (CommandResponse);
+
+  // Uses the same job id shape as StartJob so the UI can share the Job ID field.
+  rpc StopJob(StopJobRequest) returns (CommandResponse);
+
+  // Uses a service name from the UI for service-level restarts.
+  rpc RestartService(RestartServiceRequest) returns (CommandResponse);
+}
+
+// Empty messages are still useful because every RPC has one request type and
+// one response type. This keeps the service easy to extend later.
+message GetStatusRequest {}
+
+message StartJobRequest {
+  // Proto field names use snake_case. The generated TypeScript property is
+  // camelCase: jobId.
+  string job_id = 1;
+}
+
+message StopJobRequest {
+  // Reuses field number 1 because this is a separate message type.
+  string job_id = 1;
+}
+
+message RestartServiceRequest {
+  // Generated TypeScript property: serviceName.
+  string service_name = 1;
+}
+
+message StatusResponse {
+  // Keep response fields small and display-friendly for this starter console.
+  string state = 1;
+  string detail = 2;
+
+  // Generated TypeScript property: checkedAt.
+  string checked_at = 3;
+}
+
+message CommandResponse {
+  // request_id lets the server return a trace/correlation id for logs.
+  string request_id = 1;
+  string message = 2;
+  bool accepted = 3;
+}

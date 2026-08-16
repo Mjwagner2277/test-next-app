@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "test-next-app.fullname" . }}-envoy
+  labels:
+    {{- include "test-next-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: envoy
+spec:
+  type: {{ .Values.envoy.service.type }}
+  ports:
+    - name: grpc-web
+      port: {{ .Values.envoy.service.port }}
+      targetPort: grpc-web
+{{ if .Values.envoy.admin.enabled }}
+    - name: admin
+      port: {{ .Values.envoy.admin.port }}
+      targetPort: admin
+{{ end }}
+  selector:
+    app.kubernetes.io/name: {{ include "test-next-app.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: envoy

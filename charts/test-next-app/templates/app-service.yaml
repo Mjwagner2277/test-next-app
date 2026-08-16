@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "test-next-app.fullname" . }}-app
+  labels:
+    {{- include "test-next-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: app
+spec:
+  type: {{ .Values.app.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.app.service.port }}
+      targetPort: http
+  selector:
+    app.kubernetes.io/name: {{ include "test-next-app.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: app
