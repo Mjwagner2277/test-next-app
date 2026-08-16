@@ -6,7 +6,7 @@ clean: true
 
 plugins:
   # protoc-gen-es turns the .proto service/messages into TypeScript descriptors
-  # used by ConnectRPC in src/grpc/controlPanelClient.ts.
+  # used by ConnectRPC in src/rpc/controlPanelClient.ts.
   - local: protoc-gen-es
     out: src/gen
     opt:

@@ -28,7 +28,7 @@ spec:
             - --log-level
             - info
           ports:
-            - name: grpc-web
+            - name: connect
               containerPort: 8080
 {{ if .Values.envoy.admin.enabled }}
             - name: admin

@@ -2,7 +2,7 @@
 // @generated from file proto/controlpanel/v1/control_panel.proto (package controlpanel.v1, syntax proto3)
 /* eslint-disable */
 
-// The package becomes part of the generated TypeScript names and the full gRPC
+// The package becomes part of the generated TypeScript names and full RPC
 // method paths. Keep it stable once clients and servers depend on it.
 
 import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
@@ -150,9 +150,10 @@ export const CommandResponseSchema: GenMessage<CommandResponse> = /*@__PURE__*/
   messageDesc(file_proto_controlpanel_v1_control_panel, 5);
 
 /**
- * This service is the contract shared by the UI and the gRPC server. The React
- * app never hand-builds URLs for these calls; ConnectRPC uses this generated
- * service descriptor to know each method name and request/response type.
+ * This service is the contract shared by the UI and the Connect server. The
+ * React app never hand-builds URLs for these calls; ConnectRPC uses this
+ * generated service descriptor to know each method name and request/response
+ * type.
  *
  * @generated from service controlpanel.v1.ControlPanelService
  */

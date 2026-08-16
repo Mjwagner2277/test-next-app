@@ -1,7 +1,7 @@
 'use client'
 
 // This component runs in the browser because it keeps interactive React state
-// and calls the gRPC-Web endpoint from the user's browser. Next.js server
+// and calls the Connect endpoint from the user's browser. Next.js server
 // components cannot handle button clicks or use browser APIs like performance.
 import AutorenewIcon from '@mui/icons-material/Autorenew'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
@@ -31,9 +31,9 @@ import {
 import { useEffect, useMemo, useState } from 'react'
 import {
   createControlPanelClient,
-  describeGrpcError,
-} from '@/grpc/controlPanelClient'
-import type { GrpcBrowserConfig } from '@/grpc/config'
+  describeConnectError,
+} from '@/rpc/controlPanelClient'
+import type { ConnectBrowserConfig } from '@/rpc/config'
 
 export function ControlPanelConsole() {
   // These are request inputs, not connection inputs. The server/proxy endpoint
@@ -52,26 +52,29 @@ export function ControlPanelConsole() {
 
   // This config is loaded from the Next.js server at runtime. Helm sets the
   // server environment variables, and this browser component reads the resolved
-  // values through /api/grpc-config.
-  const [grpcConfig, setGrpcConfig] = useState<GrpcBrowserConfig | null>(null)
+  // values through /api/connect-config.
+  const [connectConfig, setConnectConfig] =
+    useState<ConnectBrowserConfig | null>(null)
   const [configError, setConfigError] = useState<string | null>(null)
-  const proxyEndpoint = grpcConfig?.baseUrl ?? 'Loading configuration'
+  const proxyEndpoint = connectConfig?.baseUrl ?? 'Loading configuration'
 
   useEffect(() => {
     let isCurrentRequest = true
 
-    async function loadGrpcConfig() {
+    async function loadConnectConfig() {
       try {
-        const response = await fetch('/api/grpc-config', { cache: 'no-store' })
+        const response = await fetch('/api/connect-config', {
+          cache: 'no-store',
+        })
 
         if (!response.ok) {
           throw new Error(`Config request failed with HTTP ${response.status}`)
         }
 
-        const nextConfig = (await response.json()) as GrpcBrowserConfig
+        const nextConfig = (await response.json()) as ConnectBrowserConfig
 
         if (isCurrentRequest) {
-          setGrpcConfig(nextConfig)
+          setConnectConfig(nextConfig)
           setConfigError(null)
         }
       } catch (error) {
@@ -79,13 +82,13 @@ export function ControlPanelConsole() {
           setConfigError(
             error instanceof Error
               ? error.message
-              : 'Unable to load gRPC configuration',
+              : 'Unable to load Connect configuration',
           )
         }
       }
     }
 
-    loadGrpcConfig()
+    loadConnectConfig()
 
     return () => {
       // Ignore late fetch results if React remounts the component during
@@ -98,8 +101,8 @@ export function ControlPanelConsole() {
   // on every keystroke in the job/service fields. It only changes after runtime
   // config loads or if the config endpoint returns a different value.
   const client = useMemo(
-    () => (grpcConfig ? createControlPanelClient(grpcConfig) : null),
-    [grpcConfig],
+    () => (connectConfig ? createControlPanelClient(connectConfig) : null),
+    [connectConfig],
   )
 
   const canCall =
@@ -128,7 +131,7 @@ export function ControlPanelConsole() {
         status: 'error',
         at: new Date().toLocaleTimeString(),
         durationMs: Math.round(performance.now() - startedAt),
-        payload: describeGrpcError(error),
+        payload: describeConnectError(error),
       })
     } finally {
       setPendingAction(null)
@@ -143,7 +146,7 @@ export function ControlPanelConsole() {
 
   function requireClient() {
     if (!client) {
-      throw new Error('gRPC configuration is still loading')
+      throw new Error('Connect configuration is still loading')
     }
 
     return client
@@ -192,7 +195,7 @@ export function ControlPanelConsole() {
                 ControlPanelService
               </Typography>
               <Typography component="h1" variant="h1">
-                gRPC Command Console
+                RPC Command Console
               </Typography>
             </Box>
             <Chip
@@ -224,8 +227,8 @@ export function ControlPanelConsole() {
                   sx={{ mb: 2.5 }}
                 >
                   {configError
-                    ? `gRPC config error: ${configError}`
-                    : `Envoy proxy endpoint: ${proxyEndpoint}`}
+                    ? `Connect config error: ${configError}`
+                    : `Envoy Connect endpoint: ${proxyEndpoint}`}
                 </Alert>
 
                 {/* These fields become protobuf request fields for the RPCs. */}
@@ -253,7 +256,7 @@ export function ControlPanelConsole() {
                 <Grid
                   container
                   spacing={1.75}
-                  aria-label="gRPC actions"
+                  aria-label="RPC actions"
                   sx={{ mt: 3.5 }}
                 >
                   {/* Each button maps directly to one method from the .proto service. */}
@@ -379,7 +382,7 @@ export function ControlPanelConsole() {
                   </Box>
                 ) : (
                   // The response log shows either formatted protobuf responses
-                  // or normalized ConnectRPC errors from describeGrpcError().
+                  // or normalized ConnectRPC errors from describeConnectError().
                   <List disablePadding>
                     {history.map((entry, index) => (
                       <Box key={entry.id}>

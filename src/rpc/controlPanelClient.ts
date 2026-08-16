@@ -4,7 +4,7 @@ import {
   createClient,
   type Client,
 } from '@connectrpc/connect'
-import { createGrpcWebTransport } from '@connectrpc/connect-web'
+import { createConnectTransport } from '@connectrpc/connect-web'
 import { ControlPanelService } from '../gen/proto/controlpanel/v1/control_panel_pb'
 
 // Client<typeof Service> gives TypeScript methods that match the .proto file.
@@ -21,9 +21,9 @@ export function createControlPanelClient({
   baseUrl,
   authToken,
 }: ClientOptions): ControlPanelClient {
-  // Browsers speak gRPC-Web here. Envoy receives that request and translates it
-  // to native gRPC/HTTP2 for the upstream server configured in envoy.yaml.
-  const transport = createGrpcWebTransport({
+  // Browsers use the Connect protocol here. Envoy is only proxying HTTP
+  // requests, so the upstream server must expose Connect protocol endpoints.
+  const transport = createConnectTransport({
     baseUrl,
     interceptors: authToken
       ? [
@@ -41,11 +41,11 @@ export function createControlPanelClient({
   return createClient(ControlPanelService, transport)
 }
 
-export function describeGrpcError(error: unknown): string {
+export function describeConnectError(error: unknown): string {
   // ConnectError.from normalizes thrown values from fetch, Envoy, ConnectRPC,
   // and plain JavaScript errors into one shape for display.
-  const grpcError = ConnectError.from(error)
-  const codeName = Code[grpcError.code] ?? 'Unknown'
+  const connectError = ConnectError.from(error)
+  const codeName = Code[connectError.code] ?? 'Unknown'
 
-  return `${codeName}: ${grpcError.rawMessage}`
+  return `${codeName}: ${connectError.rawMessage}`
 }

@@ -1,12 +1,13 @@
 syntax = "proto3";
 
-// The package becomes part of the generated TypeScript names and the full gRPC
+// The package becomes part of the generated TypeScript names and full RPC
 // method paths. Keep it stable once clients and servers depend on it.
 package controlpanel.v1;
 
-// This service is the contract shared by the UI and the gRPC server. The React
-// app never hand-builds URLs for these calls; ConnectRPC uses this generated
-// service descriptor to know each method name and request/response type.
+// This service is the contract shared by the UI and the Connect server. The
+// React app never hand-builds URLs for these calls; ConnectRPC uses this
+// generated service descriptor to know each method name and request/response
+// type.
 service ControlPanelService {
   // Empty request because "status" does not need user input.
   rpc GetStatus(GetStatusRequest) returns (StatusResponse);
