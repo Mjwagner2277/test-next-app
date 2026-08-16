@@ -12,7 +12,7 @@ A Next.js + TypeScript control panel for calling a native server-hosted gRPC ser
 - Envoy listens for browser gRPC-Web calls and forwards them to the native gRPC server over HTTP/2.
 - Helm describes how the Next.js app, Envoy proxy, Services, and Envoy config are deployed to Kubernetes.
 
-Browsers cannot call native gRPC directly, so the app calls Envoy over gRPC-Web. The browser gets the Envoy URL from the Next.js `/api/grpc-config` endpoint. That endpoint reads server-side environment variables, which the Helm chart fills from `charts/test-next-app/values.yaml`. Envoy then forwards requests to the native gRPC server configured under `upstreamGrpc`.
+Browsers cannot call native gRPC directly, so the app calls Envoy over gRPC-Web. The browser gets the Envoy URL from the Next.js `/api/grpc-config` endpoint. That endpoint reads server-side environment variables, which the Helm chart fills from `helm/test-next-app/values.yaml`. Envoy then forwards requests to the native gRPC server configured under `upstreamGrpc`.
 
 ## Run
 
@@ -38,7 +38,7 @@ GRPC_AUTH_TOKEN=
 The UI does not accept a server URL. Connection details are configured in files:
 
 - Browser-to-Envoy endpoint: `.env` locally, or Helm `grpcWebProxyUrl` in Kubernetes.
-- Envoy-to-gRPC-server endpoint: `charts/test-next-app/values.yaml`, under `upstreamGrpc`.
+- Envoy-to-gRPC-server endpoint: `helm/test-next-app/values.yaml`, under `upstreamGrpc`.
 
 The browser still needs the Envoy URL because it makes the gRPC-Web request directly. The app exposes that value through `/api/grpc-config` so Helm can change it when the container starts. This avoids rebuilding the Docker image just to point at a different Envoy URL.
 
@@ -61,18 +61,18 @@ Change those values to point Envoy at your real server-hosted gRPC endpoint and 
 
 ## Helm
 
-The chart lives in `charts/test-next-app`.
+The chart lives in `helm/test-next-app`.
 
 Render the manifests locally:
 
 ```sh
-helm template test-next-app ./charts/test-next-app
+helm template test-next-app ./helm/test-next-app
 ```
 
 Install or upgrade:
 
 ```sh
-helm upgrade --install test-next-app ./charts/test-next-app \
+helm upgrade --install test-next-app ./helm/test-next-app \
   --set image.repository=your-registry/test-next-app \
   --set image.tag=your-tag \
   --set grpcWebProxyUrl=https://your-envoy.example.com \
@@ -94,6 +94,18 @@ The chart deploys:
 - a Next.js app Deployment and Service
 - an Envoy Deployment and Service
 - an Envoy ConfigMap generated from Helm values
+
+## Build
+
+Docker-related build files live in `build`.
+
+Build the app image from the repository root:
+
+```sh
+docker build -f build/Dockerfile -t test-next-app:latest .
+```
+
+The `.` at the end is important. It tells Docker to use the repo root as the build context, so `build/Dockerfile` can copy `package.json`, `src`, `proto`, and the other app files. `build/Dockerfile.dockerignore` keeps local-only folders such as `node_modules` and `.next` out of that context.
 
 ## Request Flow
 
@@ -124,5 +136,6 @@ Replace the sample proto with your real service definition, rerun `npm run proto
 - `src/grpc` contains the ConnectRPC transport/client setup.
 - `src/app/api/grpc-config` contains the runtime config endpoint used by Helm deployments.
 - `src/gen` contains Buf-generated TypeScript from `proto/controlpanel/v1/control_panel.proto`.
-- `charts/test-next-app` contains the Helm deployment for the app and Envoy.
+- `helm/test-next-app` contains the Helm deployment for the app and Envoy.
+- `build` contains Docker image build files.
 - `envoy/envoy.yaml` is a plain Envoy reference config; Helm renders the deployable config from chart values.

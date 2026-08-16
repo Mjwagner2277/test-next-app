@@ -1,4 +1,4 @@
-# Image for the Next.js app built from the Dockerfile at the repo root.
+# Image for the Next.js app built with build/Dockerfile from the repo root.
 image:
   repository: test-next-app
   tag: latest
