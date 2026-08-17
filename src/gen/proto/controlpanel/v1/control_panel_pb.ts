@@ -150,7 +150,7 @@ export const CommandResponseSchema: GenMessage<CommandResponse> = /*@__PURE__*/
   messageDesc(file_proto_controlpanel_v1_control_panel, 5);
 
 /**
- * This service is the contract shared by the UI and the Connect server. The
+ * This service is the contract shared by the UI and the native gRPC server. The
  * React app never hand-builds URLs for these calls; ConnectRPC uses this
  * generated service descriptor to know each method name and request/response
  * type.

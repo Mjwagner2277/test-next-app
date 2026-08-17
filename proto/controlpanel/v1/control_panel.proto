@@ -4,7 +4,7 @@ syntax = "proto3";
 // method paths. Keep it stable once clients and servers depend on it.
 package controlpanel.v1;
 
-// This service is the contract shared by the UI and the Connect server. The
+// This service is the contract shared by the UI and the native gRPC server. The
 // React app never hand-builds URLs for these calls; ConnectRPC uses this
 // generated service descriptor to know each method name and request/response
 // type.

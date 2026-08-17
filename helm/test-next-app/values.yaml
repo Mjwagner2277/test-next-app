@@ -4,18 +4,18 @@ image:
   tag: latest
   pullPolicy: IfNotPresent
 
-# Public URL the browser uses for Connect protocol calls. In this chart, Envoy
-# is exposed as a separate Service, so this should point at Envoy's reachable URL.
-connectProxyUrl: http://localhost:8080
+# Public URL the browser uses for gRPC-Web calls. In this chart, Envoy is
+# exposed as a separate Service, so this should point at Envoy's reachable URL.
+grpcWebProxyUrl: http://localhost:8080
 
-# This value is returned to the browser by /api/connect-config. Leave empty
+# This value is returned to the browser by /api/grpc-config. Leave empty
 # unless it is safe for end users to inspect.
-connectAuthToken: ""
+grpcWebAuthToken: ""
 
-# Connect protocol server reached by Envoy. In Kubernetes this is usually a
-# Service DNS name, for example: control-panel-api.default.svc.cluster.local.
-upstreamConnect:
-  host: control-panel-connect.default.svc.cluster.local
+# Native gRPC server reached by Envoy. In Kubernetes this is usually a Service
+# DNS name, for example: control-panel-api.default.svc.cluster.local.
+upstreamGrpc:
+  host: control-panel-grpc.default.svc.cluster.local
   port: 9090
 
 app:

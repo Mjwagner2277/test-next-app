@@ -1,11 +1,11 @@
 // This file intentionally contains only values and types that are safe to share
 // with the browser. Server-side environment lookups live in serverConfig.ts.
 
-// This URL is the browser-facing Connect protocol endpoint. In local
-// development it is Envoy on port 8080, not the upstream service itself.
-export const DEFAULT_CONNECT_PROXY_URL = 'http://localhost:8080'
+// This URL is the browser-facing gRPC-Web endpoint. In local development it is
+// Envoy on port 8080, not the native gRPC server itself.
+export const DEFAULT_GRPC_WEB_PROXY_URL = 'http://localhost:8080'
 
-export type ConnectBrowserConfig = {
+export type GrpcWebBrowserConfig = {
   // controlPanelClient.ts calls this "baseUrl" because that is the name used by
   // ConnectRPC transports.
   baseUrl: string

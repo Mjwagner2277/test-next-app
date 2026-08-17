@@ -8,9 +8,9 @@ metadata:
 spec:
   type: {{ .Values.envoy.service.type }}
   ports:
-    - name: connect
+    - name: grpc-web
       port: {{ .Values.envoy.service.port }}
-      targetPort: connect
+      targetPort: grpc-web
 {{ if .Values.envoy.admin.enabled }}
     - name: admin
       port: {{ .Values.envoy.admin.port }}

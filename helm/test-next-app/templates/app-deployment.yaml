@@ -27,12 +27,12 @@ spec:
               containerPort: 3000
           env:
             # The Next.js API route reads this runtime value and returns it to
-            # the browser from /api/connect-config.
-            - name: CONNECT_PROXY_URL
-              value: {{ .Values.connectProxyUrl | quote }}
-            # This is exposed to the browser by /api/connect-config. Use only for
+            # the browser from /api/grpc-config.
+            - name: GRPC_WEB_PROXY_URL
+              value: {{ .Values.grpcWebProxyUrl | quote }}
+            # This is exposed to the browser by /api/grpc-config. Use only for
             # public/demo tokens, not private server credentials.
-            - name: CONNECT_AUTH_TOKEN
-              value: {{ .Values.connectAuthToken | quote }}
+            - name: GRPC_WEB_AUTH_TOKEN
+              value: {{ .Values.grpcWebAuthToken | quote }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
