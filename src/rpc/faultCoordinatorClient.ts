@@ -17,7 +17,7 @@ type ClientOptions = {
   authToken?: string
 }
 
-export function createControlPanelClient({
+export function createFaultCoordinatorClient({
   baseUrl,
   authToken,
 }: ClientOptions): FaultCoordinatorClient {

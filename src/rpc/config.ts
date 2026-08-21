@@ -6,8 +6,7 @@
 export const DEFAULT_GRPC_WEB_PROXY_URL = 'http://localhost:8080'
 
 export type GrpcWebBrowserConfig = {
-  // controlPanelClient.ts calls this "baseUrl" because that is the name used by
-  // ConnectRPC transports.
+  // ConnectRPC transports call this value "baseUrl".
   baseUrl: string
   // If provided, this is sent from the browser and is therefore visible to end
   // users. Do not put private server credentials here.

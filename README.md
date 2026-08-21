@@ -128,12 +128,12 @@ The `.` at the end is important. It tells Docker to use the repo root as the bui
 1. The user picks a fault variant in `src/app/ControlPanelConsole.tsx`.
 2. The user clicks `Inject`, `Remove`, `Refresh state`, or `System reset`.
 3. The page fetches `/api/grpc-config` to get the configured Envoy gRPC-Web URL.
-4. The page calls the typed ConnectRPC client in `src/rpc/controlPanelClient.ts`.
+4. The page calls the typed ConnectRPC client in `src/rpc/faultCoordinatorClient.ts`.
 5. ConnectRPC sends a gRPC-Web request to Envoy.
 6. Envoy receives that browser-compatible request on port `8080`.
 7. Envoy's `grpc_web` filter translates the request for the native gRPC server.
 8. Envoy forwards the request to the `native_grpc_server` upstream.
-9. The response comes back through Envoy and is displayed in the RPC activity panel.
+9. The response comes back through Envoy and updates the connection path panel.
 
 ## Service Contract
 
@@ -157,6 +157,7 @@ The protobuf enum `FaultVariant` contains the variants shown in the UI: `High`, 
 ## App Structure
 
 - `src/app` contains the Next.js app-router page, layout, MUI provider, and theme.
+- `src/features/faults` contains the sensor fault UI, model helpers, and fault-specific presentation components.
 - `src/rpc` contains the ConnectRPC transport/client setup.
 - `src/app/api/grpc-config` contains the runtime config endpoint used by Helm deployments.
 - `src/gen` contains Buf-generated TypeScript from `proto/controlpanel/v1/control_panel.proto`.
