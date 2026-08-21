@@ -19,7 +19,6 @@ import {
   CircularProgress,
   Container,
   Divider,
-  Grid,
   List,
   ListItem,
   MenuItem,
@@ -426,39 +425,6 @@ export function ControlPanelConsole() {
             </Stack>
           </Box>
 
-          <Box sx={{ p: 2, borderBottom: '1px solid #33404d' }}>
-            <Grid container spacing={1.25}>
-              {buildSummaryTiles(activeFaults).map((tile) => (
-                <Grid key={tile.label} size={{ xs: 12, sm: 6, lg: 3 }}>
-                  <Box
-                    sx={{
-                      minHeight: 70,
-                      p: 1.25,
-                      border: '1px solid',
-                      borderColor: tile.active ? '#ff8d80' : '#33404d',
-                      borderRadius: 1,
-                      bgcolor: tile.active ? '#421c18' : '#1d2530',
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        color: '#aab6c2',
-                        fontSize: 12,
-                        fontWeight: 800,
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      {tile.label}
-                    </Typography>
-                    <Typography sx={{ mt: 0.5, fontWeight: 800 }}>
-                      {tile.value}
-                    </Typography>
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-
           <Box
             sx={{
               display: 'grid',
@@ -748,12 +714,6 @@ type RpcRunOptions<Response> = {
   onSuccess?: (response: Response) => void
 }
 
-type SummaryTile = {
-  label: string
-  value: string
-  active: boolean
-}
-
 function toProtoVariant(variant: UiFaultVariant) {
   // The UI uses friendly labels while the wire protocol uses generated enum
   // values. Keeping this conversion in one place makes proto changes obvious.
@@ -799,28 +759,6 @@ function upsertActiveFault(current: ActiveFault[], nextFault: ActiveFault) {
   )
 
   return [nextFault, ...remaining]
-}
-
-function buildSummaryTiles(activeFaults: ActiveFault[]): SummaryTile[] {
-  const activeTiles = activeFaults.slice(0, 2).map((fault) => ({
-    label: fault.sensorName,
-    value: `${fault.variant} injected ${fault.insertedAt}`,
-    active: true,
-  }))
-
-  return [
-    ...activeTiles,
-    {
-      label: 'Next queued',
-      value: 'Temperature A high',
-      active: false,
-    },
-    {
-      label: 'Reset scope',
-      value: 'All injected faults',
-      active: false,
-    },
-  ].slice(0, 4)
 }
 
 function hasServerFaultState(
