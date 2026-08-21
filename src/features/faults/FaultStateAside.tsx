@@ -1,33 +1,31 @@
 import { Stack } from '@mui/material'
-import type { ActiveFault, RpcLogEntry } from './faultModel'
+import type { ActiveFault, SensorRow, UiFaultVariant } from './faultModel'
 import { ActiveFaultPanel } from './ActiveFaultPanel'
-import { ConnectionStatusPanel } from './ConnectionStatusPanel'
 import { FaultLegendPanel } from './FaultLegendPanel'
+import { FaultVariantOverviewPanel } from './FaultVariantOverviewPanel'
 
 type FaultStateAsideProps = {
   activeFaults: ActiveFault[]
-  proxyEndpoint: string
-  configError: string | null
-  pendingAction: string | null
-  history: RpcLogEntry[]
+  sensors: SensorRow[]
+  variants: UiFaultVariant[]
+  selectedVariants: Record<string, UiFaultVariant>
 }
 
 export function FaultStateAside({
   activeFaults,
-  proxyEndpoint,
-  configError,
-  pendingAction,
-  history,
+  sensors,
+  variants,
+  selectedVariants,
 }: FaultStateAsideProps) {
   return (
     <Stack component="aside" spacing={1.5} aria-label="Fault state">
       <ActiveFaultPanel activeFaults={activeFaults} />
       <FaultLegendPanel />
-      <ConnectionStatusPanel
-        proxyEndpoint={proxyEndpoint}
-        configError={configError}
-        pendingAction={pendingAction}
-        history={history}
+      <FaultVariantOverviewPanel
+        sensors={sensors}
+        variants={variants}
+        selectedVariants={selectedVariants}
+        activeFaults={activeFaults}
       />
     </Stack>
   )

@@ -133,7 +133,7 @@ The `.` at the end is important. It tells Docker to use the repo root as the bui
 6. Envoy receives that browser-compatible request on port `8080`.
 7. Envoy's `grpc_web` filter translates the request for the native gRPC server.
 8. Envoy forwards the request to the `native_grpc_server` upstream.
-9. The response comes back through Envoy and updates the connection path panel.
+9. The response comes back through Envoy and updates the active fault state.
 
 ## Service Contract
 

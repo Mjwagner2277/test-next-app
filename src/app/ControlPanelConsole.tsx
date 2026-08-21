@@ -13,9 +13,7 @@ import {
   FAULT_VARIANTS,
   INITIAL_ACTIVE_FAULTS,
   SENSOR_ROWS,
-  createLogId,
   defaultSelectedVariants,
-  formatPayload,
   hasServerFaultState,
   isAcceptedCommand,
   toActiveFault,
@@ -23,7 +21,6 @@ import {
   upsertActiveFault,
   type FaultCommand,
   type FaultState,
-  type RpcLogEntry,
   type RpcRunOptions,
   type SensorRow,
   type UiFaultVariant,
@@ -49,10 +46,7 @@ export function ControlPanelConsole() {
   // gives the operator immediate feedback that a gRPC-Web call is underway.
   const [pendingAction, setPendingAction] = useState<string | null>(null)
 
-  // Keep a short client-side history so side panels can show the latest
-  // transport state without turning the operator view into a debug console.
-  const [history, setHistory] = useState<RpcLogEntry[]>([])
-  const { grpcWebConfig, configError, proxyEndpoint } = useGrpcWebConfig()
+  const { grpcWebConfig, configError } = useGrpcWebConfig()
 
   // ConnectRPC clients are cheap, but useMemo prevents recreating the transport
   // on every select change. It only changes after runtime config loads.
@@ -91,7 +85,6 @@ export function ControlPanelConsole() {
     onAccepted,
     onSuccess,
   }: RpcRunOptions<Response>) {
-    const startedAt = performance.now()
     setPendingAction(name)
 
     try {
@@ -111,32 +104,11 @@ export function ControlPanelConsole() {
         }
       }
 
-      appendLog({
-        id: createLogId(),
-        name,
-        status: isAccepted ? 'success' : 'error',
-        at: new Date().toLocaleTimeString(),
-        durationMs: Math.round(performance.now() - startedAt),
-        payload: formatPayload(response),
-      })
     } catch (error) {
-      appendLog({
-        id: createLogId(),
-        name,
-        status: 'error',
-        at: new Date().toLocaleTimeString(),
-        durationMs: Math.round(performance.now() - startedAt),
-        payload: describeRpcError(error),
-      })
+      globalThis.console.warn(`${name} failed: ${describeRpcError(error)}`)
     } finally {
       setPendingAction(null)
     }
-  }
-
-  function appendLog(entry: RpcLogEntry) {
-    // Show newest entries first and cap the list so repeated clicking does not
-    // grow browser memory usage forever.
-    setHistory((current) => [entry, ...current].slice(0, 6))
   }
 
   function refreshFaultState() {
@@ -248,10 +220,9 @@ export function ControlPanelConsole() {
 
             <FaultStateAside
               activeFaults={activeFaults}
-              proxyEndpoint={proxyEndpoint}
-              configError={configError}
-              pendingAction={pendingAction}
-              history={history}
+              sensors={SENSOR_ROWS}
+              variants={FAULT_VARIANTS}
+              selectedVariants={selectedVariants}
             />
           </Box>
         </Paper>

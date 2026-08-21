@@ -23,17 +23,6 @@ export type ActiveFault = {
   detail: string
 }
 
-// This is display-only client state. It does not need to match the server
-// schema because it represents UI history, not a protobuf request/response.
-export type RpcLogEntry = {
-  id: string
-  name: string
-  status: 'success' | 'error'
-  at: string
-  durationMs: number
-  payload: string
-}
-
 export type RpcRunOptions<Response> = {
   name: string
   call: () => Promise<Response>
@@ -188,21 +177,4 @@ export function isAcceptedCommand(response: unknown) {
   }
 
   return true
-}
-
-export function createLogId() {
-  // randomUUID is available in modern browsers; Date.now keeps the app usable
-  // in older/test environments where crypto may be absent.
-  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}`
-}
-
-export function formatPayload(value: unknown) {
-  // Generated protobuf messages are plain enough to stringify for a simple
-  // review console. BigInt needs special handling because JSON.stringify cannot
-  // serialize it by default.
-  return JSON.stringify(
-    value,
-    (_key, item) => (typeof item === 'bigint' ? item.toString() : item),
-    2,
-  )
 }
