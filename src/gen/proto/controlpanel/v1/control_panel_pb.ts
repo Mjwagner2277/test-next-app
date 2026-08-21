@@ -5,125 +5,172 @@
 // The package becomes part of the generated TypeScript names and full RPC
 // method paths. Keep it stable once clients and servers depend on it.
 
-import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
-import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
+import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
+import { enumDesc, fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file proto/controlpanel/v1/control_panel.proto.
  */
 export const file_proto_controlpanel_v1_control_panel: GenFile = /*@__PURE__*/
-  fileDesc("Cilwcm90by9jb250cm9scGFuZWwvdjEvY29udHJvbF9wYW5lbC5wcm90bxIPY29udHJvbHBhbmVsLnYxIhIKEEdldFN0YXR1c1JlcXVlc3QiIQoPU3RhcnRKb2JSZXF1ZXN0Eg4KBmpvYl9pZBgBIAEoCSIgCg5TdG9wSm9iUmVxdWVzdBIOCgZqb2JfaWQYASABKAkiLQoVUmVzdGFydFNlcnZpY2VSZXF1ZXN0EhQKDHNlcnZpY2VfbmFtZRgBIAEoCSJDCg5TdGF0dXNSZXNwb25zZRINCgVzdGF0ZRgBIAEoCRIOCgZkZXRhaWwYAiABKAkSEgoKY2hlY2tlZF9hdBgDIAEoCSJICg9Db21tYW5kUmVzcG9uc2USEgoKcmVxdWVzdF9pZBgBIAEoCRIPCgdtZXNzYWdlGAIgASgJEhAKCGFjY2VwdGVkGAMgASgIMuACChNDb250cm9sUGFuZWxTZXJ2aWNlEk8KCUdldFN0YXR1cxIhLmNvbnRyb2xwYW5lbC52MS5HZXRTdGF0dXNSZXF1ZXN0Gh8uY29udHJvbHBhbmVsLnYxLlN0YXR1c1Jlc3BvbnNlEk4KCFN0YXJ0Sm9iEiAuY29udHJvbHBhbmVsLnYxLlN0YXJ0Sm9iUmVxdWVzdBogLmNvbnRyb2xwYW5lbC52MS5Db21tYW5kUmVzcG9uc2USTAoHU3RvcEpvYhIfLmNvbnRyb2xwYW5lbC52MS5TdG9wSm9iUmVxdWVzdBogLmNvbnRyb2xwYW5lbC52MS5Db21tYW5kUmVzcG9uc2USWgoOUmVzdGFydFNlcnZpY2USJi5jb250cm9scGFuZWwudjEuUmVzdGFydFNlcnZpY2VSZXF1ZXN0GiAuY29udHJvbHBhbmVsLnYxLkNvbW1hbmRSZXNwb25zZWIGcHJvdG8z");
+  fileDesc("Cilwcm90by9jb250cm9scGFuZWwvdjEvY29udHJvbF9wYW5lbC5wcm90bxIPY29udHJvbHBhbmVsLnYxIhYKFEdldEZhdWx0U3RhdGVSZXF1ZXN0InIKGEluamVjdFNlbnNvckZhdWx0UmVxdWVzdBIRCglzZW5zb3JfaWQYASABKAkSEwoLc2Vuc29yX25hbWUYAiABKAkSLgoHdmFyaWFudBgDIAEoDjIdLmNvbnRyb2xwYW5lbC52MS5GYXVsdFZhcmlhbnQiLAoXQ2xlYXJTZW5zb3JGYXVsdFJlcXVlc3QSEQoJc2Vuc29yX2lkGAEgASgJIiMKElJlc2V0U3lzdGVtUmVxdWVzdBINCgVzY29wZRgBIAEoCSKKAQoLU2Vuc29yRmF1bHQSEQoJc2Vuc29yX2lkGAEgASgJEhMKC3NlbnNvcl9uYW1lGAIgASgJEi4KB3ZhcmlhbnQYAyABKA4yHS5jb250cm9scGFuZWwudjEuRmF1bHRWYXJpYW50EhMKC2luc2VydGVkX2F0GAQgASgJEg4KBmRldGFpbBgFIAEoCSJdChJGYXVsdFN0YXRlUmVzcG9uc2USMwoNYWN0aXZlX2ZhdWx0cxgBIAMoCzIcLmNvbnRyb2xwYW5lbC52MS5TZW5zb3JGYXVsdBISCgpjaGVja2VkX2F0GAIgASgJIoIBChRGYXVsdENvbW1hbmRSZXNwb25zZRISCgpyZXF1ZXN0X2lkGAEgASgJEg8KB21lc3NhZ2UYAiABKAkSEAoIYWNjZXB0ZWQYAyABKAgSMwoNYWN0aXZlX2ZhdWx0cxgEIAMoCzIcLmNvbnRyb2xwYW5lbC52MS5TZW5zb3JGYXVsdCp3CgxGYXVsdFZhcmlhbnQSHQoZRkFVTFRfVkFSSUFOVF9VTlNQRUNJRklFRBAAEhYKEkZBVUxUX1ZBUklBTlRfSElHSBABEhUKEUZBVUxUX1ZBUklBTlRfTE9XEAISGQoVRkFVTFRfVkFSSUFOVF9VTktOT1dOEAMynQMKF0ZhdWx0Q29vcmRpbmF0b3JTZXJ2aWNlElsKDUdldEZhdWx0U3RhdGUSJS5jb250cm9scGFuZWwudjEuR2V0RmF1bHRTdGF0ZVJlcXVlc3QaIy5jb250cm9scGFuZWwudjEuRmF1bHRTdGF0ZVJlc3BvbnNlEmUKEUluamVjdFNlbnNvckZhdWx0EikuY29udHJvbHBhbmVsLnYxLkluamVjdFNlbnNvckZhdWx0UmVxdWVzdBolLmNvbnRyb2xwYW5lbC52MS5GYXVsdENvbW1hbmRSZXNwb25zZRJjChBDbGVhclNlbnNvckZhdWx0EiguY29udHJvbHBhbmVsLnYxLkNsZWFyU2Vuc29yRmF1bHRSZXF1ZXN0GiUuY29udHJvbHBhbmVsLnYxLkZhdWx0Q29tbWFuZFJlc3BvbnNlElkKC1Jlc2V0U3lzdGVtEiMuY29udHJvbHBhbmVsLnYxLlJlc2V0U3lzdGVtUmVxdWVzdBolLmNvbnRyb2xwYW5lbC52MS5GYXVsdENvbW1hbmRSZXNwb25zZWIGcHJvdG8z");
 
 /**
  * Empty messages are still useful because every RPC has one request type and
  * one response type. This keeps the service easy to extend later.
  *
- * @generated from message controlpanel.v1.GetStatusRequest
+ * @generated from message controlpanel.v1.GetFaultStateRequest
  */
-export type GetStatusRequest = Message<"controlpanel.v1.GetStatusRequest"> & {
+export type GetFaultStateRequest = Message<"controlpanel.v1.GetFaultStateRequest"> & {
 };
 
 /**
- * Describes the message controlpanel.v1.GetStatusRequest.
- * Use `create(GetStatusRequestSchema)` to create a new message.
+ * Describes the message controlpanel.v1.GetFaultStateRequest.
+ * Use `create(GetFaultStateRequestSchema)` to create a new message.
  */
-export const GetStatusRequestSchema: GenMessage<GetStatusRequest> = /*@__PURE__*/
+export const GetFaultStateRequestSchema: GenMessage<GetFaultStateRequest> = /*@__PURE__*/
   messageDesc(file_proto_controlpanel_v1_control_panel, 0);
 
 /**
- * @generated from message controlpanel.v1.StartJobRequest
+ * @generated from message controlpanel.v1.InjectSensorFaultRequest
  */
-export type StartJobRequest = Message<"controlpanel.v1.StartJobRequest"> & {
+export type InjectSensorFaultRequest = Message<"controlpanel.v1.InjectSensorFaultRequest"> & {
   /**
-   * Proto field names use snake_case. The generated TypeScript property is
-   * camelCase: jobId.
+   * Stable machine-readable id for the sensor row, for example "pressure-b".
    *
-   * @generated from field: string job_id = 1;
+   * @generated from field: string sensor_id = 1;
    */
-  jobId: string;
+  sensorId: string;
+
+  /**
+   * Human-readable display name. The server can ignore this if it already owns
+   * the sensor catalog, but it is convenient in starter/demo environments.
+   *
+   * @generated from field: string sensor_name = 2;
+   */
+  sensorName: string;
+
+  /**
+   * Generated TypeScript property: variant.
+   *
+   * @generated from field: controlpanel.v1.FaultVariant variant = 3;
+   */
+  variant: FaultVariant;
 };
 
 /**
- * Describes the message controlpanel.v1.StartJobRequest.
- * Use `create(StartJobRequestSchema)` to create a new message.
+ * Describes the message controlpanel.v1.InjectSensorFaultRequest.
+ * Use `create(InjectSensorFaultRequestSchema)` to create a new message.
  */
-export const StartJobRequestSchema: GenMessage<StartJobRequest> = /*@__PURE__*/
+export const InjectSensorFaultRequestSchema: GenMessage<InjectSensorFaultRequest> = /*@__PURE__*/
   messageDesc(file_proto_controlpanel_v1_control_panel, 1);
 
 /**
- * @generated from message controlpanel.v1.StopJobRequest
+ * @generated from message controlpanel.v1.ClearSensorFaultRequest
  */
-export type StopJobRequest = Message<"controlpanel.v1.StopJobRequest"> & {
+export type ClearSensorFaultRequest = Message<"controlpanel.v1.ClearSensorFaultRequest"> & {
   /**
-   * Reuses field number 1 because this is a separate message type.
+   * Clears whichever variant is currently active for this sensor.
    *
-   * @generated from field: string job_id = 1;
+   * @generated from field: string sensor_id = 1;
    */
-  jobId: string;
+  sensorId: string;
 };
 
 /**
- * Describes the message controlpanel.v1.StopJobRequest.
- * Use `create(StopJobRequestSchema)` to create a new message.
+ * Describes the message controlpanel.v1.ClearSensorFaultRequest.
+ * Use `create(ClearSensorFaultRequestSchema)` to create a new message.
  */
-export const StopJobRequestSchema: GenMessage<StopJobRequest> = /*@__PURE__*/
+export const ClearSensorFaultRequestSchema: GenMessage<ClearSensorFaultRequest> = /*@__PURE__*/
   messageDesc(file_proto_controlpanel_v1_control_panel, 2);
 
 /**
- * @generated from message controlpanel.v1.RestartServiceRequest
+ * @generated from message controlpanel.v1.ResetSystemRequest
  */
-export type RestartServiceRequest = Message<"controlpanel.v1.RestartServiceRequest"> & {
+export type ResetSystemRequest = Message<"controlpanel.v1.ResetSystemRequest"> & {
   /**
-   * Generated TypeScript property: serviceName.
+   * Lets the caller describe the reset intent without introducing more enum
+   * surface area before the backend contract is final.
    *
-   * @generated from field: string service_name = 1;
+   * @generated from field: string scope = 1;
    */
-  serviceName: string;
+  scope: string;
 };
 
 /**
- * Describes the message controlpanel.v1.RestartServiceRequest.
- * Use `create(RestartServiceRequestSchema)` to create a new message.
+ * Describes the message controlpanel.v1.ResetSystemRequest.
+ * Use `create(ResetSystemRequestSchema)` to create a new message.
  */
-export const RestartServiceRequestSchema: GenMessage<RestartServiceRequest> = /*@__PURE__*/
+export const ResetSystemRequestSchema: GenMessage<ResetSystemRequest> = /*@__PURE__*/
   messageDesc(file_proto_controlpanel_v1_control_panel, 3);
 
 /**
- * @generated from message controlpanel.v1.StatusResponse
+ * @generated from message controlpanel.v1.SensorFault
  */
-export type StatusResponse = Message<"controlpanel.v1.StatusResponse"> & {
+export type SensorFault = Message<"controlpanel.v1.SensorFault"> & {
   /**
-   * Keep response fields small and display-friendly for this starter console.
-   *
-   * @generated from field: string state = 1;
+   * @generated from field: string sensor_id = 1;
    */
-  state: string;
+  sensorId: string;
 
   /**
-   * @generated from field: string detail = 2;
+   * @generated from field: string sensor_name = 2;
+   */
+  sensorName: string;
+
+  /**
+   * @generated from field: controlpanel.v1.FaultVariant variant = 3;
+   */
+  variant: FaultVariant;
+
+  /**
+   * ISO timestamp or elapsed string returned by the backend for display.
+   *
+   * @generated from field: string inserted_at = 4;
+   */
+  insertedAt: string;
+
+  /**
+   * Optional backend-supplied context, such as who inserted the fault.
+   *
+   * @generated from field: string detail = 5;
    */
   detail: string;
+};
+
+/**
+ * Describes the message controlpanel.v1.SensorFault.
+ * Use `create(SensorFaultSchema)` to create a new message.
+ */
+export const SensorFaultSchema: GenMessage<SensorFault> = /*@__PURE__*/
+  messageDesc(file_proto_controlpanel_v1_control_panel, 4);
+
+/**
+ * @generated from message controlpanel.v1.FaultStateResponse
+ */
+export type FaultStateResponse = Message<"controlpanel.v1.FaultStateResponse"> & {
+  /**
+   * @generated from field: repeated controlpanel.v1.SensorFault active_faults = 1;
+   */
+  activeFaults: SensorFault[];
 
   /**
-   * Generated TypeScript property: checkedAt.
-   *
-   * @generated from field: string checked_at = 3;
+   * @generated from field: string checked_at = 2;
    */
   checkedAt: string;
 };
 
 /**
- * Describes the message controlpanel.v1.StatusResponse.
- * Use `create(StatusResponseSchema)` to create a new message.
+ * Describes the message controlpanel.v1.FaultStateResponse.
+ * Use `create(FaultStateResponseSchema)` to create a new message.
  */
-export const StatusResponseSchema: GenMessage<StatusResponse> = /*@__PURE__*/
-  messageDesc(file_proto_controlpanel_v1_control_panel, 4);
+export const FaultStateResponseSchema: GenMessage<FaultStateResponse> = /*@__PURE__*/
+  messageDesc(file_proto_controlpanel_v1_control_panel, 5);
 
 /**
- * @generated from message controlpanel.v1.CommandResponse
+ * @generated from message controlpanel.v1.FaultCommandResponse
  */
-export type CommandResponse = Message<"controlpanel.v1.CommandResponse"> & {
+export type FaultCommandResponse = Message<"controlpanel.v1.FaultCommandResponse"> & {
   /**
    * request_id lets the server return a trace/correlation id for logs.
    *
@@ -140,14 +187,57 @@ export type CommandResponse = Message<"controlpanel.v1.CommandResponse"> & {
    * @generated from field: bool accepted = 3;
    */
   accepted: boolean;
+
+  /**
+   * Returning active_faults lets the server be the source of truth after every
+   * command. If empty, the UI keeps its optimistic local preview state.
+   *
+   * @generated from field: repeated controlpanel.v1.SensorFault active_faults = 4;
+   */
+  activeFaults: SensorFault[];
 };
 
 /**
- * Describes the message controlpanel.v1.CommandResponse.
- * Use `create(CommandResponseSchema)` to create a new message.
+ * Describes the message controlpanel.v1.FaultCommandResponse.
+ * Use `create(FaultCommandResponseSchema)` to create a new message.
  */
-export const CommandResponseSchema: GenMessage<CommandResponse> = /*@__PURE__*/
-  messageDesc(file_proto_controlpanel_v1_control_panel, 5);
+export const FaultCommandResponseSchema: GenMessage<FaultCommandResponse> = /*@__PURE__*/
+  messageDesc(file_proto_controlpanel_v1_control_panel, 6);
+
+/**
+ * The UI exposes these exact fault choices in a select control. Keeping them as
+ * a protobuf enum avoids accidental spelling drift between the frontend and
+ * backend.
+ *
+ * @generated from enum controlpanel.v1.FaultVariant
+ */
+export enum FaultVariant {
+  /**
+   * @generated from enum value: FAULT_VARIANT_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: FAULT_VARIANT_HIGH = 1;
+   */
+  HIGH = 1,
+
+  /**
+   * @generated from enum value: FAULT_VARIANT_LOW = 2;
+   */
+  LOW = 2,
+
+  /**
+   * @generated from enum value: FAULT_VARIANT_UNKNOWN = 3;
+   */
+  UNKNOWN = 3,
+}
+
+/**
+ * Describes the enum controlpanel.v1.FaultVariant.
+ */
+export const FaultVariantSchema: GenEnum<FaultVariant> = /*@__PURE__*/
+  enumDesc(file_proto_controlpanel_v1_control_panel, 0);
 
 /**
  * This service is the contract shared by the UI and the native gRPC server. The
@@ -155,48 +245,51 @@ export const CommandResponseSchema: GenMessage<CommandResponse> = /*@__PURE__*/
  * generated service descriptor to know each method name and request/response
  * type.
  *
- * @generated from service controlpanel.v1.ControlPanelService
+ * @generated from service controlpanel.v1.FaultCoordinatorService
  */
-export const ControlPanelService: GenService<{
+export const FaultCoordinatorService: GenService<{
   /**
-   * Empty request because "status" does not need user input.
+   * Reads the current inserted faults from the server so the UI can reflect the
+   * real coordinator state after a refresh or reconnect.
    *
-   * @generated from rpc controlpanel.v1.ControlPanelService.GetStatus
+   * @generated from rpc controlpanel.v1.FaultCoordinatorService.GetFaultState
    */
-  getStatus: {
+  getFaultState: {
     methodKind: "unary";
-    input: typeof GetStatusRequestSchema;
-    output: typeof StatusResponseSchema;
+    input: typeof GetFaultStateRequestSchema;
+    output: typeof FaultStateResponseSchema;
   },
   /**
-   * Uses a job id from the UI to start a specific server-side job.
+   * Inserts one selected sensor fault. The UI supplies both the sensor and the
+   * selected fault variant from the matrix row.
    *
-   * @generated from rpc controlpanel.v1.ControlPanelService.StartJob
+   * @generated from rpc controlpanel.v1.FaultCoordinatorService.InjectSensorFault
    */
-  startJob: {
+  injectSensorFault: {
     methodKind: "unary";
-    input: typeof StartJobRequestSchema;
-    output: typeof CommandResponseSchema;
+    input: typeof InjectSensorFaultRequestSchema;
+    output: typeof FaultCommandResponseSchema;
   },
   /**
-   * Uses the same job id shape as StartJob so the UI can share the Job ID field.
+   * Clears one sensor fault without resetting every injected condition.
    *
-   * @generated from rpc controlpanel.v1.ControlPanelService.StopJob
+   * @generated from rpc controlpanel.v1.FaultCoordinatorService.ClearSensorFault
    */
-  stopJob: {
+  clearSensorFault: {
     methodKind: "unary";
-    input: typeof StopJobRequestSchema;
-    output: typeof CommandResponseSchema;
+    input: typeof ClearSensorFaultRequestSchema;
+    output: typeof FaultCommandResponseSchema;
   },
   /**
-   * Uses a service name from the UI for service-level restarts.
+   * Clears all injected faults and asks the coordinator to return the system to
+   * its baseline state.
    *
-   * @generated from rpc controlpanel.v1.ControlPanelService.RestartService
+   * @generated from rpc controlpanel.v1.FaultCoordinatorService.ResetSystem
    */
-  restartService: {
+  resetSystem: {
     methodKind: "unary";
-    input: typeof RestartServiceRequestSchema;
-    output: typeof CommandResponseSchema;
+    input: typeof ResetSystemRequestSchema;
+    output: typeof FaultCommandResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_proto_controlpanel_v1_control_panel, 0);

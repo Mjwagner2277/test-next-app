@@ -1,11 +1,12 @@
 # test-next-app
 
-A Next.js + TypeScript control panel for calling a server-hosted gRPC service through Envoy with gRPC-Web.
+A Next.js + TypeScript sensor fault interface for calling a server-hosted gRPC service through Envoy with gRPC-Web.
 
 ## Stack
 
 - Next.js renders the app and runs the local development server.
-- MUI provides the buttons, fields, cards, alerts, layout, theme, and icons.
+- React stores the selected fault variants and the current on-screen fault state.
+- MUI provides the table, buttons, selects, chips, panels, layout, theme, and icons.
 - Protocol Buffers define the service contract in `proto/controlpanel/v1/control_panel.proto`.
 - Buf generates TypeScript from the `.proto` file into `src/gen`.
 - ConnectRPC creates a typed browser client from the generated service definition.
@@ -13,7 +14,7 @@ A Next.js + TypeScript control panel for calling a server-hosted gRPC service th
 - Envoy listens for browser gRPC-Web calls and forwards them to the native gRPC server over HTTP/2.
 - Helm describes how the Next.js app, Envoy proxy, Services, and Envoy config are deployed to Kubernetes.
 
-The app uses the ConnectRPC TypeScript library, but the selected browser protocol is gRPC-Web. The browser gets the Envoy URL from the Next.js `/api/grpc-config` endpoint. That endpoint reads server-side environment variables, which the Helm chart fills from `helm/test-next-app/values.yaml`. Envoy then translates gRPC-Web requests and forwards them to the native gRPC server configured under `upstreamGrpc`.
+The app uses the ConnectRPC TypeScript library, and the selected browser protocol is gRPC-Web. The browser gets the Envoy URL from the Next.js `/api/grpc-config` endpoint. That endpoint reads server-side environment variables, which the Helm chart fills from `helm/test-next-app/values.yaml`. Envoy then translates gRPC-Web requests and forwards them to the native gRPC server configured under `upstreamGrpc`.
 
 ## Run
 
@@ -26,6 +27,20 @@ npm run dev
 The Next.js app runs at `http://localhost:3000`.
 
 In Kubernetes, Envoy is deployed by the Helm chart and listens for browser gRPC-Web requests on the chart's Envoy Service.
+
+## What The App Shows
+
+The main screen is a 27-inch-display-oriented sensor fault matrix.
+
+- Each row represents one sensor, such as `Pressure B` or `Flow D`.
+- The `Fault variant` column lets an operator choose `High`, `Low`, or `Unknown`.
+- The row action button calls the configured gRPC-Web service through ConnectRPC.
+- Inserted faults are highlighted in the table.
+- The header chip shows the total number of faults currently in the system.
+- The right-side panel lists the active faults.
+- `System reset` calls the reset RPC and clears all injected faults when accepted.
+
+The page starts with a couple of seeded active faults so the injected state is visible during UI review even if no local gRPC server is running yet.
 
 ## Configuration
 
@@ -49,7 +64,7 @@ For Helm deployments, set the native gRPC server target in values:
 grpcWebProxyUrl: https://your-envoy.example.com
 
 upstreamGrpc:
-  host: control-panel-grpc.default.svc.cluster.local
+  host: fault-coordinator-grpc.default.svc.cluster.local
   port: 9090
 
 envoy:
@@ -110,18 +125,19 @@ The `.` at the end is important. It tells Docker to use the repo root as the bui
 
 ## Request Flow
 
-1. The user clicks a MUI button in `src/app/ControlPanelConsole.tsx`.
-2. The page fetches `/api/grpc-config` to get the configured Envoy gRPC-Web URL.
-3. The page calls the typed ConnectRPC client in `src/rpc/controlPanelClient.ts`.
-4. ConnectRPC sends a gRPC-Web request to Envoy.
-5. Envoy receives that browser-compatible request on port `8080`.
-6. Envoy's `grpc_web` filter translates the request for the native gRPC server.
-7. Envoy forwards the request to the `native_grpc_server` upstream.
-8. The response comes back through Envoy and is displayed in the response log.
+1. The user picks a fault variant in `src/app/ControlPanelConsole.tsx`.
+2. The user clicks `Inject`, `Remove`, `Refresh state`, or `System reset`.
+3. The page fetches `/api/grpc-config` to get the configured Envoy gRPC-Web URL.
+4. The page calls the typed ConnectRPC client in `src/rpc/controlPanelClient.ts`.
+5. ConnectRPC sends a gRPC-Web request to Envoy.
+6. Envoy receives that browser-compatible request on port `8080`.
+7. Envoy's `grpc_web` filter translates the request for the native gRPC server.
+8. Envoy forwards the request to the `native_grpc_server` upstream.
+9. The response comes back through Envoy and is displayed in the RPC activity panel.
 
 ## Service Contract
 
-The sample schema is in `proto/controlpanel/v1/control_panel.proto`.
+The schema is in `proto/controlpanel/v1/control_panel.proto`.
 
 The generated TypeScript lives under `src/gen` and is created with:
 
@@ -129,7 +145,14 @@ The generated TypeScript lives under `src/gen` and is created with:
 npm run proto:gen
 ```
 
-Replace the sample proto with your real service definition, rerun `npm run proto:gen`, then update the button handlers in `src/app/ControlPanelConsole.tsx`.
+The UI expects the backend to implement `controlpanel.v1.FaultCoordinatorService`:
+
+- `GetFaultState` returns the active faults currently inserted in the coordinator.
+- `InjectSensorFault` inserts one sensor fault with a selected `FaultVariant`.
+- `ClearSensorFault` removes one active sensor fault.
+- `ResetSystem` clears all injected sensor faults.
+
+The protobuf enum `FaultVariant` contains the variants shown in the UI: `High`, `Low`, and `Unknown`.
 
 ## App Structure
 

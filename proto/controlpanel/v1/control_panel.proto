@@ -8,52 +8,84 @@ package controlpanel.v1;
 // React app never hand-builds URLs for these calls; ConnectRPC uses this
 // generated service descriptor to know each method name and request/response
 // type.
-service ControlPanelService {
-  // Empty request because "status" does not need user input.
-  rpc GetStatus(GetStatusRequest) returns (StatusResponse);
+service FaultCoordinatorService {
+  // Reads the current inserted faults from the server so the UI can reflect the
+  // real coordinator state after a refresh or reconnect.
+  rpc GetFaultState(GetFaultStateRequest) returns (FaultStateResponse);
 
-  // Uses a job id from the UI to start a specific server-side job.
-  rpc StartJob(StartJobRequest) returns (CommandResponse);
+  // Inserts one selected sensor fault. The UI supplies both the sensor and the
+  // selected fault variant from the matrix row.
+  rpc InjectSensorFault(InjectSensorFaultRequest) returns (FaultCommandResponse);
 
-  // Uses the same job id shape as StartJob so the UI can share the Job ID field.
-  rpc StopJob(StopJobRequest) returns (CommandResponse);
+  // Clears one sensor fault without resetting every injected condition.
+  rpc ClearSensorFault(ClearSensorFaultRequest) returns (FaultCommandResponse);
 
-  // Uses a service name from the UI for service-level restarts.
-  rpc RestartService(RestartServiceRequest) returns (CommandResponse);
+  // Clears all injected faults and asks the coordinator to return the system to
+  // its baseline state.
+  rpc ResetSystem(ResetSystemRequest) returns (FaultCommandResponse);
+}
+
+// The UI exposes these exact fault choices in a select control. Keeping them as
+// a protobuf enum avoids accidental spelling drift between the frontend and
+// backend.
+enum FaultVariant {
+  FAULT_VARIANT_UNSPECIFIED = 0;
+  FAULT_VARIANT_HIGH = 1;
+  FAULT_VARIANT_LOW = 2;
+  FAULT_VARIANT_UNKNOWN = 3;
 }
 
 // Empty messages are still useful because every RPC has one request type and
 // one response type. This keeps the service easy to extend later.
-message GetStatusRequest {}
+message GetFaultStateRequest {}
 
-message StartJobRequest {
-  // Proto field names use snake_case. The generated TypeScript property is
-  // camelCase: jobId.
-  string job_id = 1;
+message InjectSensorFaultRequest {
+  // Stable machine-readable id for the sensor row, for example "pressure-b".
+  string sensor_id = 1;
+
+  // Human-readable display name. The server can ignore this if it already owns
+  // the sensor catalog, but it is convenient in starter/demo environments.
+  string sensor_name = 2;
+
+  // Generated TypeScript property: variant.
+  FaultVariant variant = 3;
 }
 
-message StopJobRequest {
-  // Reuses field number 1 because this is a separate message type.
-  string job_id = 1;
+message ClearSensorFaultRequest {
+  // Clears whichever variant is currently active for this sensor.
+  string sensor_id = 1;
 }
 
-message RestartServiceRequest {
-  // Generated TypeScript property: serviceName.
-  string service_name = 1;
+message ResetSystemRequest {
+  // Lets the caller describe the reset intent without introducing more enum
+  // surface area before the backend contract is final.
+  string scope = 1;
 }
 
-message StatusResponse {
-  // Keep response fields small and display-friendly for this starter console.
-  string state = 1;
-  string detail = 2;
+message SensorFault {
+  string sensor_id = 1;
+  string sensor_name = 2;
+  FaultVariant variant = 3;
 
-  // Generated TypeScript property: checkedAt.
-  string checked_at = 3;
+  // ISO timestamp or elapsed string returned by the backend for display.
+  string inserted_at = 4;
+
+  // Optional backend-supplied context, such as who inserted the fault.
+  string detail = 5;
 }
 
-message CommandResponse {
+message FaultStateResponse {
+  repeated SensorFault active_faults = 1;
+  string checked_at = 2;
+}
+
+message FaultCommandResponse {
   // request_id lets the server return a trace/correlation id for logs.
   string request_id = 1;
   string message = 2;
   bool accepted = 3;
+
+  // Returning active_faults lets the server be the source of truth after every
+  // command. If empty, the UI keeps its optimistic local preview state.
+  repeated SensorFault active_faults = 4;
 }

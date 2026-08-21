@@ -8,8 +8,9 @@ import { Providers } from './providers'
 // The export is part of the app-router API, which is why this file has a small
 // oxlint exception above.
 export const metadata: Metadata = {
-  title: 'gRPC-Web Command Console',
-  description: 'A Next.js, MUI, Buf, and ConnectRPC command console.',
+  title: 'Sensor Fault Matrix',
+  description:
+    'A Next.js, MUI, Buf, and ConnectRPC gRPC-Web sensor fault interface.',
 }
 
 type RootLayoutProps = {
