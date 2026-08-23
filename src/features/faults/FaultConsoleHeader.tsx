@@ -1,20 +1,16 @@
-import AutorenewIcon from '@mui/icons-material/Autorenew'
 import RestartAltIcon from '@mui/icons-material/RestartAlt'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import { Box, Button, Chip, Stack, Typography } from '@mui/material'
-import { commandButtonSx } from './faultUiStyles'
 
 type FaultConsoleHeaderProps = {
   faultCount: number
   canCall: boolean
-  onRefreshState: () => void
   onResetSystem: () => void
 }
 
 export function FaultConsoleHeader({
   faultCount,
   canCall,
-  onRefreshState,
   onResetSystem,
 }: FaultConsoleHeaderProps) {
   return (
@@ -65,15 +61,6 @@ export function FaultConsoleHeader({
             '& .MuiChip-icon': { color: 'inherit' },
           }}
         />
-        <Button
-          variant="outlined"
-          startIcon={<AutorenewIcon />}
-          onClick={onRefreshState}
-          disabled={!canCall}
-          sx={commandButtonSx}
-        >
-          Refresh state
-        </Button>
         <Button
           variant="outlined"
           color="error"

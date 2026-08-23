@@ -1,8 +1,7 @@
 import {
+  FaultCommandResult,
   FaultVariant,
   type FaultCommandResponse,
-  type FaultStateResponse,
-  type SensorFault,
 } from '@/gen/proto/controlpanel/v1/control_panel_pb'
 
 export type SensorRow = {
@@ -23,15 +22,13 @@ export type ActiveFault = {
   detail: string
 }
 
-export type RpcRunOptions<Response> = {
+export type RpcRunOptions = {
   name: string
-  call: () => Promise<Response>
+  call: () => Promise<FaultCommand>
   onAccepted?: () => void
-  onSuccess?: (response: Response) => void
 }
 
 export type FaultCommand = FaultCommandResponse
-export type FaultState = FaultStateResponse
 
 export const SENSOR_ROWS: SensorRow[] = [
   {
@@ -103,8 +100,6 @@ export const defaultSelectedVariants = Object.fromEntries(
   SENSOR_ROWS.map((sensor) => [sensor.id, sensor.defaultVariant]),
 ) as Record<string, UiFaultVariant>
 
-const sensorById = new Map(SENSOR_ROWS.map((sensor) => [sensor.id, sensor]))
-
 export function toProtoVariant(variant: UiFaultVariant) {
   // The UI uses friendly labels while the wire protocol uses generated enum
   // values. Keeping this conversion in one place makes proto changes obvious.
@@ -115,32 +110,6 @@ export function toProtoVariant(variant: UiFaultVariant) {
       return FaultVariant.LOW
     case 'Unknown':
       return FaultVariant.UNKNOWN
-  }
-}
-
-export function toUiVariant(variant: FaultVariant): UiFaultVariant {
-  switch (variant) {
-    case FaultVariant.HIGH:
-      return 'High'
-    case FaultVariant.LOW:
-      return 'Low'
-    case FaultVariant.UNKNOWN:
-    case FaultVariant.UNSPECIFIED:
-      return 'Unknown'
-    default:
-      return 'Unknown'
-  }
-}
-
-export function toActiveFault(fault: SensorFault): ActiveFault {
-  const catalogSensor = sensorById.get(fault.sensorId)
-
-  return {
-    sensorId: fault.sensorId,
-    sensorName: fault.sensorName || catalogSensor?.name || fault.sensorId,
-    variant: toUiVariant(fault.variant),
-    insertedAt: fault.insertedAt || 'server active',
-    detail: fault.detail || 'Reported by coordinator',
   }
 }
 
@@ -155,26 +124,9 @@ export function upsertActiveFault(
   return [nextFault, ...remaining]
 }
 
-export function hasServerFaultState(
-  response: unknown,
-): response is Pick<FaultStateResponse, 'activeFaults'> {
-  return (
-    typeof response === 'object' &&
-    response !== null &&
-    Array.isArray((response as FaultStateResponse).activeFaults)
-  )
-}
-
-export function isAcceptedCommand(response: unknown) {
-  // FaultStateResponse has no accepted field, so a successful response to
-  // GetFaultState should still be treated as accepted.
-  if (
-    typeof response === 'object' &&
-    response !== null &&
-    'accepted' in response
-  ) {
-    return (response as FaultCommandResponse).accepted
-  }
-
-  return true
+export function isAcceptedCommand(response: FaultCommand) {
+  // The backend no longer returns a state snapshot. SUCCESS is the only signal
+  // this browser has that the coordinator accepted the command, so only then do
+  // we update local "in system" state.
+  return response.result === FaultCommandResult.SUCCESS
 }

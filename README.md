@@ -37,10 +37,10 @@ The main screen is a 27-inch-display-oriented sensor fault matrix.
 - The row action button calls the configured gRPC-Web service through ConnectRPC.
 - Inserted faults are highlighted in the table.
 - The header chip shows the total number of faults currently in the system.
-- The right-side panel lists the active faults.
-- `System reset` calls the reset RPC and clears all injected faults when accepted.
+- The right-side panel lists the active faults tracked by this browser session.
+- `System reset` calls the reset RPC and clears all injected faults when the response enum is `SUCCESS`.
 
-The page starts with a couple of seeded active faults so the injected state is visible during UI review even if no local gRPC server is running yet.
+The page starts with a couple of seeded active faults so the injected state is visible during UI review even if no local gRPC server is running yet. Because this proto does not include a fault-state query response, the UI cannot reload active faults from the backend after a page refresh. It updates the display locally after successful command responses.
 
 ## Configuration
 
@@ -126,14 +126,15 @@ The `.` at the end is important. It tells Docker to use the repo root as the bui
 ## Request Flow
 
 1. The user picks a fault variant in `src/app/ControlPanelConsole.tsx`.
-2. The user clicks `Inject`, `Remove`, `Refresh state`, or `System reset`.
+2. The user clicks `Inject`, `Remove`, or `System reset`.
 3. The page fetches `/api/grpc-config` to get the configured Envoy gRPC-Web URL.
 4. The page calls the typed ConnectRPC client in `src/rpc/faultCoordinatorClient.ts`.
 5. ConnectRPC sends a gRPC-Web request to Envoy.
 6. Envoy receives that browser-compatible request on port `8080`.
 7. Envoy's `grpc_web` filter translates the request for the native gRPC server.
 8. Envoy forwards the request to the `native_grpc_server` upstream.
-9. The response comes back through Envoy and updates the active fault state.
+9. The response comes back through Envoy as `FaultCommandResponse`.
+10. If `FaultCommandResponse.result` is `FAULT_COMMAND_RESULT_SUCCESS`, the browser updates its local active fault display. If the result is `FAILURE` or `UNSPECIFIED`, the display is left unchanged.
 
 ## Service Contract
 
@@ -147,12 +148,13 @@ npm run proto:gen
 
 The UI expects the backend to implement `controlpanel.v1.FaultCoordinatorService`:
 
-- `GetFaultState` returns the active faults currently inserted in the coordinator.
 - `InjectSensorFault` inserts one sensor fault with a selected `FaultVariant`.
 - `ClearSensorFault` removes one active sensor fault.
 - `ResetSystem` clears all injected sensor faults.
 
 The protobuf enum `FaultVariant` contains the variants shown in the UI: `High`, `Low`, and `Unknown`.
+
+Each command returns `FaultCommandResponse`, which currently contains a single `FaultCommandResult` enum field named `result`. The UI treats only `FAULT_COMMAND_RESULT_SUCCESS` as accepted.
 
 ## App Structure
 

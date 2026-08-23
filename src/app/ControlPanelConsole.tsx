@@ -14,13 +14,9 @@ import {
   INITIAL_ACTIVE_FAULTS,
   SENSOR_ROWS,
   defaultSelectedVariants,
-  hasServerFaultState,
   isAcceptedCommand,
-  toActiveFault,
   toProtoVariant,
   upsertActiveFault,
-  type FaultCommand,
-  type FaultState,
   type RpcRunOptions,
   type SensorRow,
   type UiFaultVariant,
@@ -38,8 +34,9 @@ export function ControlPanelConsole() {
     defaultSelectedVariants,
   )
 
-  // activeFaults is the local view of what the coordinator currently has
-  // inserted. Successful RPC responses can replace this with server truth.
+  // activeFaults is local browser state. The current proto only returns command
+  // SUCCESS/FAILURE, so this page cannot rehydrate active faults from the
+  // coordinator after a reload.
   const [activeFaults, setActiveFaults] = useState(INITIAL_ACTIVE_FAULTS)
 
   // pendingAction disables command buttons while a request is in flight and
@@ -79,31 +76,23 @@ export function ControlPanelConsole() {
     return client
   }
 
-  async function runRpc<Response>({
+  async function runRpc({
     name,
     call,
     onAccepted,
-    onSuccess,
-  }: RpcRunOptions<Response>) {
+  }: RpcRunOptions) {
     setPendingAction(name)
 
     try {
       const response = await call()
       const isAccepted = isAcceptedCommand(response)
 
-      // Prefer explicit active_faults from the backend because the coordinator
-      // is the real source of truth. If a starter backend only returns accepted,
-      // the local update still makes the interface behave predictably.
+      // The backend response is intentionally small: a command result enum. When
+      // it reports SUCCESS, the browser updates its local "in system" display.
+      // FAILURE leaves the existing display untouched.
       if (isAccepted) {
-        onSuccess?.(response)
-
-        if (hasServerFaultState(response) && response.activeFaults.length > 0) {
-          setActiveFaults(response.activeFaults.map(toActiveFault))
-        } else {
-          onAccepted?.()
-        }
+        onAccepted?.()
       }
-
     } catch (error) {
       globalThis.console.warn(`${name} failed: ${describeRpcError(error)}`)
     } finally {
@@ -111,20 +100,10 @@ export function ControlPanelConsole() {
     }
   }
 
-  function refreshFaultState() {
-    void runRpc<FaultState>({
-      name: 'GetFaultState',
-      call: () => requireClient().getFaultState({}),
-      onSuccess: (response) => {
-        setActiveFaults(response.activeFaults.map(toActiveFault))
-      },
-    })
-  }
-
   function injectFault(sensor: SensorRow) {
     const variant = selectedVariants[sensor.id]
 
-    void runRpc<FaultCommand>({
+    void runRpc({
       name: `Inject ${sensor.name} ${variant}`,
       call: () =>
         requireClient().injectSensorFault({
@@ -139,7 +118,7 @@ export function ControlPanelConsole() {
             sensorName: sensor.name,
             variant,
             insertedAt: 'just now',
-            detail: 'Local preview after accepted insert',
+            detail: 'Accepted by coordinator',
           }),
         )
       },
@@ -147,7 +126,7 @@ export function ControlPanelConsole() {
   }
 
   function clearFault(sensor: SensorRow) {
-    void runRpc<FaultCommand>({
+    void runRpc({
       name: `Clear ${sensor.name}`,
       call: () => requireClient().clearSensorFault({ sensorId: sensor.id }),
       onAccepted: () => {
@@ -159,7 +138,7 @@ export function ControlPanelConsole() {
   }
 
   function resetSystem() {
-    void runRpc<FaultCommand>({
+    void runRpc({
       name: 'ResetSystem',
       call: () =>
         requireClient().resetSystem({ scope: 'ALL_INJECTED_SENSOR_FAULTS' }),
@@ -192,7 +171,6 @@ export function ControlPanelConsole() {
           <FaultConsoleHeader
             faultCount={faultCount}
             canCall={canCall}
-            onRefreshState={refreshFaultState}
             onResetSystem={resetSystem}
           />
 
