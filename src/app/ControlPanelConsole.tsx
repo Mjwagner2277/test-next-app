@@ -14,7 +14,7 @@ import {
   INITIAL_ACTIVE_FAULTS,
   SENSOR_ROWS,
   defaultSelectedVariants,
-  isAcceptedCommand,
+  isCommandSuccessful,
   toProtoVariant,
   upsertActiveFault,
   type RpcRunOptions,
@@ -79,19 +79,18 @@ export function ControlPanelConsole() {
   async function runRpc({
     name,
     call,
-    onAccepted,
+    onSuccess,
   }: RpcRunOptions) {
     setPendingAction(name)
 
     try {
       const response = await call()
-      const isAccepted = isAcceptedCommand(response)
+      const commandSucceeded = isCommandSuccessful(response)
 
-      // The backend response is intentionally small: a command result enum. When
-      // it reports SUCCESS, the browser updates its local "in system" display.
-      // FAILURE leaves the existing display untouched.
-      if (isAccepted) {
-        onAccepted?.()
+      // The backend can include an errors list, but this screen ignores it for
+      // now. Only the top-level SUCCESS enum changes local fault state.
+      if (commandSucceeded) {
+        onSuccess?.()
       }
     } catch (error) {
       globalThis.console.warn(`${name} failed: ${describeRpcError(error)}`)
@@ -111,7 +110,7 @@ export function ControlPanelConsole() {
           sensorName: sensor.name,
           variant: toProtoVariant(variant),
         }),
-      onAccepted: () => {
+      onSuccess: () => {
         setActiveFaults((current) =>
           upsertActiveFault(current, {
             sensorId: sensor.id,
@@ -129,7 +128,7 @@ export function ControlPanelConsole() {
     void runRpc({
       name: `Clear ${sensor.name}`,
       call: () => requireClient().clearSensorFault({ sensorId: sensor.id }),
-      onAccepted: () => {
+      onSuccess: () => {
         setActiveFaults((current) =>
           current.filter((fault) => fault.sensorId !== sensor.id),
         )
@@ -142,7 +141,7 @@ export function ControlPanelConsole() {
       name: 'ResetSystem',
       call: () =>
         requireClient().resetSystem({ scope: 'ALL_INJECTED_SENSOR_FAULTS' }),
-      onAccepted: () => setActiveFaults([]),
+      onSuccess: () => setActiveFaults([]),
     })
   }
 

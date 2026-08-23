@@ -63,7 +63,26 @@ message ResetSystemRequest {
   string scope = 1;
 }
 
+message FaultCommandError {
+  // Identifies the attempted command or command item that produced this error.
+  // For a single-command UI this can be the RPC name; for future batch requests
+  // it can identify the individual item that failed.
+  string attempted_command = 1;
+
+  // Machine-readable backend error code. The UI ignores this for now, but it is
+  // useful for future filtering, mapping, or operator-facing details.
+  string code = 2;
+
+  // Human-readable backend error detail. The current screen does not display
+  // these yet because command success/failure is driven by result.
+  string message = 3;
+}
+
 message FaultCommandResponse {
   // Generated TypeScript property: result.
   FaultCommandResult result = 1;
+
+  // Generated TypeScript property: errors. The UI receives this list but does
+  // not display or evaluate it yet.
+  repeated FaultCommandError errors = 2;
 }

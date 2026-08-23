@@ -13,7 +13,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file proto/controlpanel/v1/control_panel.proto.
  */
 export const file_proto_controlpanel_v1_control_panel: GenFile = /*@__PURE__*/
-  fileDesc("Cilwcm90by9jb250cm9scGFuZWwvdjEvY29udHJvbF9wYW5lbC5wcm90bxIPY29udHJvbHBhbmVsLnYxInIKGEluamVjdFNlbnNvckZhdWx0UmVxdWVzdBIRCglzZW5zb3JfaWQYASABKAkSEwoLc2Vuc29yX25hbWUYAiABKAkSLgoHdmFyaWFudBgDIAEoDjIdLmNvbnRyb2xwYW5lbC52MS5GYXVsdFZhcmlhbnQiLAoXQ2xlYXJTZW5zb3JGYXVsdFJlcXVlc3QSEQoJc2Vuc29yX2lkGAEgASgJIiMKElJlc2V0U3lzdGVtUmVxdWVzdBINCgVzY29wZRgBIAEoCSJLChRGYXVsdENvbW1hbmRSZXNwb25zZRIzCgZyZXN1bHQYASABKA4yIy5jb250cm9scGFuZWwudjEuRmF1bHRDb21tYW5kUmVzdWx0KncKDEZhdWx0VmFyaWFudBIdChlGQVVMVF9WQVJJQU5UX1VOU1BFQ0lGSUVEEAASFgoSRkFVTFRfVkFSSUFOVF9ISUdIEAESFQoRRkFVTFRfVkFSSUFOVF9MT1cQAhIZChVGQVVMVF9WQVJJQU5UX1VOS05PV04QAyp+ChJGYXVsdENvbW1hbmRSZXN1bHQSJAogRkFVTFRfQ09NTUFORF9SRVNVTFRfVU5TUEVDSUZJRUQQABIgChxGQVVMVF9DT01NQU5EX1JFU1VMVF9TVUNDRVNTEAESIAocRkFVTFRfQ09NTUFORF9SRVNVTFRfRkFJTFVSRRACMsACChdGYXVsdENvb3JkaW5hdG9yU2VydmljZRJlChFJbmplY3RTZW5zb3JGYXVsdBIpLmNvbnRyb2xwYW5lbC52MS5JbmplY3RTZW5zb3JGYXVsdFJlcXVlc3QaJS5jb250cm9scGFuZWwudjEuRmF1bHRDb21tYW5kUmVzcG9uc2USYwoQQ2xlYXJTZW5zb3JGYXVsdBIoLmNvbnRyb2xwYW5lbC52MS5DbGVhclNlbnNvckZhdWx0UmVxdWVzdBolLmNvbnRyb2xwYW5lbC52MS5GYXVsdENvbW1hbmRSZXNwb25zZRJZCgtSZXNldFN5c3RlbRIjLmNvbnRyb2xwYW5lbC52MS5SZXNldFN5c3RlbVJlcXVlc3QaJS5jb250cm9scGFuZWwudjEuRmF1bHRDb21tYW5kUmVzcG9uc2ViBnByb3RvMw");
+  fileDesc("Cilwcm90by9jb250cm9scGFuZWwvdjEvY29udHJvbF9wYW5lbC5wcm90bxIPY29udHJvbHBhbmVsLnYxInIKGEluamVjdFNlbnNvckZhdWx0UmVxdWVzdBIRCglzZW5zb3JfaWQYASABKAkSEwoLc2Vuc29yX25hbWUYAiABKAkSLgoHdmFyaWFudBgDIAEoDjIdLmNvbnRyb2xwYW5lbC52MS5GYXVsdFZhcmlhbnQiLAoXQ2xlYXJTZW5zb3JGYXVsdFJlcXVlc3QSEQoJc2Vuc29yX2lkGAEgASgJIiMKElJlc2V0U3lzdGVtUmVxdWVzdBINCgVzY29wZRgBIAEoCSJNChFGYXVsdENvbW1hbmRFcnJvchIZChFhdHRlbXB0ZWRfY29tbWFuZBgBIAEoCRIMCgRjb2RlGAIgASgJEg8KB21lc3NhZ2UYAyABKAkifwoURmF1bHRDb21tYW5kUmVzcG9uc2USMwoGcmVzdWx0GAEgASgOMiMuY29udHJvbHBhbmVsLnYxLkZhdWx0Q29tbWFuZFJlc3VsdBIyCgZlcnJvcnMYAiADKAsyIi5jb250cm9scGFuZWwudjEuRmF1bHRDb21tYW5kRXJyb3IqdwoMRmF1bHRWYXJpYW50Eh0KGUZBVUxUX1ZBUklBTlRfVU5TUEVDSUZJRUQQABIWChJGQVVMVF9WQVJJQU5UX0hJR0gQARIVChFGQVVMVF9WQVJJQU5UX0xPVxACEhkKFUZBVUxUX1ZBUklBTlRfVU5LTk9XThADKn4KEkZhdWx0Q29tbWFuZFJlc3VsdBIkCiBGQVVMVF9DT01NQU5EX1JFU1VMVF9VTlNQRUNJRklFRBAAEiAKHEZBVUxUX0NPTU1BTkRfUkVTVUxUX1NVQ0NFU1MQARIgChxGQVVMVF9DT01NQU5EX1JFU1VMVF9GQUlMVVJFEAIywAIKF0ZhdWx0Q29vcmRpbmF0b3JTZXJ2aWNlEmUKEUluamVjdFNlbnNvckZhdWx0EikuY29udHJvbHBhbmVsLnYxLkluamVjdFNlbnNvckZhdWx0UmVxdWVzdBolLmNvbnRyb2xwYW5lbC52MS5GYXVsdENvbW1hbmRSZXNwb25zZRJjChBDbGVhclNlbnNvckZhdWx0EiguY29udHJvbHBhbmVsLnYxLkNsZWFyU2Vuc29yRmF1bHRSZXF1ZXN0GiUuY29udHJvbHBhbmVsLnYxLkZhdWx0Q29tbWFuZFJlc3BvbnNlElkKC1Jlc2V0U3lzdGVtEiMuY29udHJvbHBhbmVsLnYxLlJlc2V0U3lzdGVtUmVxdWVzdBolLmNvbnRyb2xwYW5lbC52MS5GYXVsdENvbW1hbmRSZXNwb25zZWIGcHJvdG8z");
 
 /**
  * @generated from message controlpanel.v1.InjectSensorFaultRequest
@@ -89,6 +89,43 @@ export const ResetSystemRequestSchema: GenMessage<ResetSystemRequest> = /*@__PUR
   messageDesc(file_proto_controlpanel_v1_control_panel, 2);
 
 /**
+ * @generated from message controlpanel.v1.FaultCommandError
+ */
+export type FaultCommandError = Message<"controlpanel.v1.FaultCommandError"> & {
+  /**
+   * Identifies the attempted command or command item that produced this error.
+   * For a single-command UI this can be the RPC name; for future batch requests
+   * it can identify the individual item that failed.
+   *
+   * @generated from field: string attempted_command = 1;
+   */
+  attemptedCommand: string;
+
+  /**
+   * Machine-readable backend error code. The UI ignores this for now, but it is
+   * useful for future filtering, mapping, or operator-facing details.
+   *
+   * @generated from field: string code = 2;
+   */
+  code: string;
+
+  /**
+   * Human-readable backend error detail. The current screen does not display
+   * these yet because command success/failure is driven by result.
+   *
+   * @generated from field: string message = 3;
+   */
+  message: string;
+};
+
+/**
+ * Describes the message controlpanel.v1.FaultCommandError.
+ * Use `create(FaultCommandErrorSchema)` to create a new message.
+ */
+export const FaultCommandErrorSchema: GenMessage<FaultCommandError> = /*@__PURE__*/
+  messageDesc(file_proto_controlpanel_v1_control_panel, 3);
+
+/**
  * @generated from message controlpanel.v1.FaultCommandResponse
  */
 export type FaultCommandResponse = Message<"controlpanel.v1.FaultCommandResponse"> & {
@@ -98,6 +135,14 @@ export type FaultCommandResponse = Message<"controlpanel.v1.FaultCommandResponse
    * @generated from field: controlpanel.v1.FaultCommandResult result = 1;
    */
   result: FaultCommandResult;
+
+  /**
+   * Generated TypeScript property: errors. The UI receives this list but does
+   * not display or evaluate it yet.
+   *
+   * @generated from field: repeated controlpanel.v1.FaultCommandError errors = 2;
+   */
+  errors: FaultCommandError[];
 };
 
 /**
@@ -105,7 +150,7 @@ export type FaultCommandResponse = Message<"controlpanel.v1.FaultCommandResponse
  * Use `create(FaultCommandResponseSchema)` to create a new message.
  */
 export const FaultCommandResponseSchema: GenMessage<FaultCommandResponse> = /*@__PURE__*/
-  messageDesc(file_proto_controlpanel_v1_control_panel, 3);
+  messageDesc(file_proto_controlpanel_v1_control_panel, 4);
 
 /**
  * The UI exposes these exact fault choices in a select control. Keeping them as

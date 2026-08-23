@@ -25,7 +25,7 @@ export type ActiveFault = {
 export type RpcRunOptions = {
   name: string
   call: () => Promise<FaultCommand>
-  onAccepted?: () => void
+  onSuccess?: () => void
 }
 
 export type FaultCommand = FaultCommandResponse
@@ -124,9 +124,9 @@ export function upsertActiveFault(
   return [nextFault, ...remaining]
 }
 
-export function isAcceptedCommand(response: FaultCommand) {
-  // The backend no longer returns a state snapshot. SUCCESS is the only signal
-  // this browser has that the coordinator accepted the command, so only then do
-  // we update local "in system" state.
+export function isCommandSuccessful(response: FaultCommand) {
+  // The backend also returns per-command errors, but this first UI pass ignores
+  // that list. For now the top-level enum is the only value that decides whether
+  // local "in system" state should update.
   return response.result === FaultCommandResult.SUCCESS
 }
