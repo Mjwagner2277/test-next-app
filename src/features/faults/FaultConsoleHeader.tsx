@@ -4,13 +4,13 @@ import { Box, Button, Chip, Stack, Typography } from '@mui/material'
 
 type FaultConsoleHeaderProps = {
   faultCount: number
-  canCall: boolean
+  isBusy: boolean
   onResetSystem: () => void
 }
 
 export function FaultConsoleHeader({
   faultCount,
-  canCall,
+  isBusy,
   onResetSystem,
 }: FaultConsoleHeaderProps) {
   return (
@@ -63,18 +63,26 @@ export function FaultConsoleHeader({
         />
         <Button
           variant="outlined"
-          color="error"
           startIcon={<RestartAltIcon />}
           onClick={onResetSystem}
-          disabled={!canCall || faultCount === 0}
+          // Reset stays available during local UI review and when there are no
+          // active faults. Only an in-flight RPC disables it to prevent double
+          // submitting the command.
+          disabled={isBusy}
           sx={{
             minHeight: 36,
-            borderColor: '#ff8d80',
-            color: '#ffb0a6',
-            bgcolor: '#421c18',
+            borderColor: '#4cc9d4',
+            color: '#8ae4ec',
+            bgcolor: '#10383d',
+            fontWeight: 800,
             '&:hover': {
-              borderColor: '#ffb0a6',
-              bgcolor: '#55231f',
+              borderColor: '#8ae4ec',
+              bgcolor: '#164a51',
+            },
+            '&.Mui-disabled': {
+              borderColor: '#33404d',
+              color: '#aab6c2',
+              bgcolor: '#1d2530',
             },
           }}
         >

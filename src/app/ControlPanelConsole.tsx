@@ -185,7 +185,7 @@ export function ControlPanelConsole() {
         >
           <FaultConsoleHeader
             faultCount={faultCount}
-            canCall={canCall}
+            isBusy={pendingAction !== null}
             onResetSystem={resetSystem}
           />
 
