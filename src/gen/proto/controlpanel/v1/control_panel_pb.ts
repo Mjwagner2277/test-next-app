@@ -13,7 +13,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file proto/controlpanel/v1/control_panel.proto.
  */
 export const file_proto_controlpanel_v1_control_panel: GenFile = /*@__PURE__*/
-  fileDesc("Cilwcm90by9jb250cm9scGFuZWwvdjEvY29udHJvbF9wYW5lbC5wcm90bxIPY29udHJvbHBhbmVsLnYxInIKGEluamVjdFNlbnNvckZhdWx0UmVxdWVzdBIRCglzZW5zb3JfaWQYASABKAkSEwoLc2Vuc29yX25hbWUYAiABKAkSLgoHdmFyaWFudBgDIAEoDjIdLmNvbnRyb2xwYW5lbC52MS5GYXVsdFZhcmlhbnQiLAoXQ2xlYXJTZW5zb3JGYXVsdFJlcXVlc3QSEQoJc2Vuc29yX2lkGAEgASgJIiMKElJlc2V0U3lzdGVtUmVxdWVzdBINCgVzY29wZRgBIAEoCSJNChFGYXVsdENvbW1hbmRFcnJvchIZChFhdHRlbXB0ZWRfY29tbWFuZBgBIAEoCRIMCgRjb2RlGAIgASgJEg8KB21lc3NhZ2UYAyABKAkifwoURmF1bHRDb21tYW5kUmVzcG9uc2USMwoGcmVzdWx0GAEgASgOMiMuY29udHJvbHBhbmVsLnYxLkZhdWx0Q29tbWFuZFJlc3VsdBIyCgZlcnJvcnMYAiADKAsyIi5jb250cm9scGFuZWwudjEuRmF1bHRDb21tYW5kRXJyb3IqdwoMRmF1bHRWYXJpYW50Eh0KGUZBVUxUX1ZBUklBTlRfVU5TUEVDSUZJRUQQABIWChJGQVVMVF9WQVJJQU5UX0hJR0gQARIVChFGQVVMVF9WQVJJQU5UX0xPVxACEhkKFUZBVUxUX1ZBUklBTlRfVU5LTk9XThADKn4KEkZhdWx0Q29tbWFuZFJlc3VsdBIkCiBGQVVMVF9DT01NQU5EX1JFU1VMVF9VTlNQRUNJRklFRBAAEiAKHEZBVUxUX0NPTU1BTkRfUkVTVUxUX1NVQ0NFU1MQARIgChxGQVVMVF9DT01NQU5EX1JFU1VMVF9GQUlMVVJFEAIywAIKF0ZhdWx0Q29vcmRpbmF0b3JTZXJ2aWNlEmUKEUluamVjdFNlbnNvckZhdWx0EikuY29udHJvbHBhbmVsLnYxLkluamVjdFNlbnNvckZhdWx0UmVxdWVzdBolLmNvbnRyb2xwYW5lbC52MS5GYXVsdENvbW1hbmRSZXNwb25zZRJjChBDbGVhclNlbnNvckZhdWx0EiguY29udHJvbHBhbmVsLnYxLkNsZWFyU2Vuc29yRmF1bHRSZXF1ZXN0GiUuY29udHJvbHBhbmVsLnYxLkZhdWx0Q29tbWFuZFJlc3BvbnNlElkKC1Jlc2V0U3lzdGVtEiMuY29udHJvbHBhbmVsLnYxLlJlc2V0U3lzdGVtUmVxdWVzdBolLmNvbnRyb2xwYW5lbC52MS5GYXVsdENvbW1hbmRSZXNwb25zZWIGcHJvdG8z");
+  fileDesc("Cilwcm90by9jb250cm9scGFuZWwvdjEvY29udHJvbF9wYW5lbC5wcm90bxIPY29udHJvbHBhbmVsLnYxInIKGEluamVjdFNlbnNvckZhdWx0UmVxdWVzdBIRCglzZW5zb3JfaWQYASABKAkSEwoLc2Vuc29yX25hbWUYAiABKAkSLgoHdmFyaWFudBgDIAEoDjIdLmNvbnRyb2xwYW5lbC52MS5GYXVsdFZhcmlhbnQiLAoXQ2xlYXJTZW5zb3JGYXVsdFJlcXVlc3QSEQoJc2Vuc29yX2lkGAEgASgJIiMKElJlc2V0U3lzdGVtUmVxdWVzdBINCgVzY29wZRgBIAEoCSKSAQoOUmVzcG9uc2VTdGF0dXMSNgoGc3RhdHVzGAEgASgOMiYuY29udHJvbHBhbmVsLnYxLlJlc3BvbnNlU3RhdHVzLlN0YXR1cyJICgZTdGF0dXMSFgoSU1RBVFVTX1VOU1BFQ0lGSUVEEAASEgoOU1RBVFVTX1NVQ0NFU1MQARISCg5TVEFUVVNfRkFJTFVSRRACIk0KEUZhdWx0Q29tbWFuZEVycm9yEhkKEWF0dGVtcHRlZF9jb21tYW5kGAEgASgJEgwKBGNvZGUYAiABKAkSDwoHbWVzc2FnZRgDIAEoCSKEAQoURmF1bHRDb21tYW5kUmVzcG9uc2USOAoPcmVzcG9uc2Vfc3RhdHVzGAEgASgLMh8uY29udHJvbHBhbmVsLnYxLlJlc3BvbnNlU3RhdHVzEjIKBmVycm9ycxgCIAMoCzIiLmNvbnRyb2xwYW5lbC52MS5GYXVsdENvbW1hbmRFcnJvcip3CgxGYXVsdFZhcmlhbnQSHQoZRkFVTFRfVkFSSUFOVF9VTlNQRUNJRklFRBAAEhYKEkZBVUxUX1ZBUklBTlRfSElHSBABEhUKEUZBVUxUX1ZBUklBTlRfTE9XEAISGQoVRkFVTFRfVkFSSUFOVF9VTktOT1dOEAMywAIKF0ZhdWx0Q29vcmRpbmF0b3JTZXJ2aWNlEmUKEUluamVjdFNlbnNvckZhdWx0EikuY29udHJvbHBhbmVsLnYxLkluamVjdFNlbnNvckZhdWx0UmVxdWVzdBolLmNvbnRyb2xwYW5lbC52MS5GYXVsdENvbW1hbmRSZXNwb25zZRJjChBDbGVhclNlbnNvckZhdWx0EiguY29udHJvbHBhbmVsLnYxLkNsZWFyU2Vuc29yRmF1bHRSZXF1ZXN0GiUuY29udHJvbHBhbmVsLnYxLkZhdWx0Q29tbWFuZFJlc3BvbnNlElkKC1Jlc2V0U3lzdGVtEiMuY29udHJvbHBhbmVsLnYxLlJlc2V0U3lzdGVtUmVxdWVzdBolLmNvbnRyb2xwYW5lbC52MS5GYXVsdENvbW1hbmRSZXNwb25zZWIGcHJvdG8z");
 
 /**
  * @generated from message controlpanel.v1.InjectSensorFaultRequest
@@ -89,6 +89,55 @@ export const ResetSystemRequestSchema: GenMessage<ResetSystemRequest> = /*@__PUR
   messageDesc(file_proto_controlpanel_v1_control_panel, 2);
 
 /**
+ * @generated from message controlpanel.v1.ResponseStatus
+ */
+export type ResponseStatus = Message<"controlpanel.v1.ResponseStatus"> & {
+  /**
+   * Generated TypeScript property: status.
+   *
+   * @generated from field: controlpanel.v1.ResponseStatus.Status status = 1;
+   */
+  status: ResponseStatus_Status;
+};
+
+/**
+ * Describes the message controlpanel.v1.ResponseStatus.
+ * Use `create(ResponseStatusSchema)` to create a new message.
+ */
+export const ResponseStatusSchema: GenMessage<ResponseStatus> = /*@__PURE__*/
+  messageDesc(file_proto_controlpanel_v1_control_panel, 3);
+
+/**
+ * The enum is intentionally nested under ResponseStatus to mirror backends
+ * that wrap status metadata in an object instead of returning the enum as a
+ * direct field on the command response.
+ *
+ * @generated from enum controlpanel.v1.ResponseStatus.Status
+ */
+export enum ResponseStatus_Status {
+  /**
+   * @generated from enum value: STATUS_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: STATUS_SUCCESS = 1;
+   */
+  SUCCESS = 1,
+
+  /**
+   * @generated from enum value: STATUS_FAILURE = 2;
+   */
+  FAILURE = 2,
+}
+
+/**
+ * Describes the enum controlpanel.v1.ResponseStatus.Status.
+ */
+export const ResponseStatus_StatusSchema: GenEnum<ResponseStatus_Status> = /*@__PURE__*/
+  enumDesc(file_proto_controlpanel_v1_control_panel, 3, 0);
+
+/**
  * @generated from message controlpanel.v1.FaultCommandError
  */
 export type FaultCommandError = Message<"controlpanel.v1.FaultCommandError"> & {
@@ -111,7 +160,7 @@ export type FaultCommandError = Message<"controlpanel.v1.FaultCommandError"> & {
 
   /**
    * Human-readable backend error detail. The current screen does not display
-   * these yet because command success/failure is driven by result.
+   * these yet because command success/failure is driven by response_status.
    *
    * @generated from field: string message = 3;
    */
@@ -123,18 +172,18 @@ export type FaultCommandError = Message<"controlpanel.v1.FaultCommandError"> & {
  * Use `create(FaultCommandErrorSchema)` to create a new message.
  */
 export const FaultCommandErrorSchema: GenMessage<FaultCommandError> = /*@__PURE__*/
-  messageDesc(file_proto_controlpanel_v1_control_panel, 3);
+  messageDesc(file_proto_controlpanel_v1_control_panel, 4);
 
 /**
  * @generated from message controlpanel.v1.FaultCommandResponse
  */
 export type FaultCommandResponse = Message<"controlpanel.v1.FaultCommandResponse"> & {
   /**
-   * Generated TypeScript property: result.
+   * Generated TypeScript property: responseStatus.
    *
-   * @generated from field: controlpanel.v1.FaultCommandResult result = 1;
+   * @generated from field: controlpanel.v1.ResponseStatus response_status = 1;
    */
-  result: FaultCommandResult;
+  responseStatus?: ResponseStatus | undefined;
 
   /**
    * Generated TypeScript property: errors. The UI receives this list but does
@@ -150,7 +199,7 @@ export type FaultCommandResponse = Message<"controlpanel.v1.FaultCommandResponse
  * Use `create(FaultCommandResponseSchema)` to create a new message.
  */
 export const FaultCommandResponseSchema: GenMessage<FaultCommandResponse> = /*@__PURE__*/
-  messageDesc(file_proto_controlpanel_v1_control_panel, 4);
+  messageDesc(file_proto_controlpanel_v1_control_panel, 5);
 
 /**
  * The UI exposes these exact fault choices in a select control. Keeping them as
@@ -186,36 +235,6 @@ export enum FaultVariant {
  */
 export const FaultVariantSchema: GenEnum<FaultVariant> = /*@__PURE__*/
   enumDesc(file_proto_controlpanel_v1_control_panel, 0);
-
-/**
- * Every mutating RPC returns this small result enum. The UI treats SUCCESS as
- * permission to update its local display and treats FAILURE as a rejected
- * command that should not change local fault state.
- *
- * @generated from enum controlpanel.v1.FaultCommandResult
- */
-export enum FaultCommandResult {
-  /**
-   * @generated from enum value: FAULT_COMMAND_RESULT_UNSPECIFIED = 0;
-   */
-  UNSPECIFIED = 0,
-
-  /**
-   * @generated from enum value: FAULT_COMMAND_RESULT_SUCCESS = 1;
-   */
-  SUCCESS = 1,
-
-  /**
-   * @generated from enum value: FAULT_COMMAND_RESULT_FAILURE = 2;
-   */
-  FAILURE = 2,
-}
-
-/**
- * Describes the enum controlpanel.v1.FaultCommandResult.
- */
-export const FaultCommandResultSchema: GenEnum<FaultCommandResult> = /*@__PURE__*/
-  enumDesc(file_proto_controlpanel_v1_control_panel, 1);
 
 /**
  * This service is the contract shared by the UI and the native gRPC server. The

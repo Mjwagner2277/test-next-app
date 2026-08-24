@@ -1,6 +1,6 @@
 import {
-  FaultCommandResult,
   FaultVariant,
+  ResponseStatus_Status,
   type FaultCommandResponse,
 } from '@/gen/proto/controlpanel/v1/control_panel_pb'
 
@@ -24,11 +24,9 @@ export type ActiveFault = {
 
 export type RpcRunOptions = {
   name: string
-  call: () => Promise<FaultCommand>
+  call: () => Promise<FaultCommandResponse>
   onSuccess?: () => void
 }
-
-export type FaultCommand = FaultCommandResponse
 
 export const SENSOR_ROWS: SensorRow[] = [
   {
@@ -124,9 +122,9 @@ export function upsertActiveFault(
   return [nextFault, ...remaining]
 }
 
-export function isCommandSuccessful(response: FaultCommand) {
+export function isCommandSuccessful(response: FaultCommandResponse) {
   // The backend also returns per-command errors, but this first UI pass ignores
-  // that list. For now the top-level enum is the only value that decides whether
-  // local "in system" state should update.
-  return response.result === FaultCommandResult.SUCCESS
+  // that list. For now the nested status enum is the only value that decides
+  // whether local "in system" state should update.
+  return response.responseStatus?.status === ResponseStatus_Status.SUCCESS
 }

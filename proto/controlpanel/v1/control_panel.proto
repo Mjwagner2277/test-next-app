@@ -31,15 +31,6 @@ enum FaultVariant {
   FAULT_VARIANT_UNKNOWN = 3;
 }
 
-// Every mutating RPC returns this small result enum. The UI treats SUCCESS as
-// permission to update its local display and treats FAILURE as a rejected
-// command that should not change local fault state.
-enum FaultCommandResult {
-  FAULT_COMMAND_RESULT_UNSPECIFIED = 0;
-  FAULT_COMMAND_RESULT_SUCCESS = 1;
-  FAULT_COMMAND_RESULT_FAILURE = 2;
-}
-
 message InjectSensorFaultRequest {
   // Stable machine-readable id for the sensor row, for example "pressure-b".
   string sensor_id = 1;
@@ -63,6 +54,20 @@ message ResetSystemRequest {
   string scope = 1;
 }
 
+message ResponseStatus {
+  // The enum is intentionally nested under ResponseStatus to mirror backends
+  // that wrap status metadata in an object instead of returning the enum as a
+  // direct field on the command response.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    STATUS_SUCCESS = 1;
+    STATUS_FAILURE = 2;
+  }
+
+  // Generated TypeScript property: status.
+  Status status = 1;
+}
+
 message FaultCommandError {
   // Identifies the attempted command or command item that produced this error.
   // For a single-command UI this can be the RPC name; for future batch requests
@@ -74,13 +79,13 @@ message FaultCommandError {
   string code = 2;
 
   // Human-readable backend error detail. The current screen does not display
-  // these yet because command success/failure is driven by result.
+  // these yet because command success/failure is driven by response_status.
   string message = 3;
 }
 
 message FaultCommandResponse {
-  // Generated TypeScript property: result.
-  FaultCommandResult result = 1;
+  // Generated TypeScript property: responseStatus.
+  ResponseStatus response_status = 1;
 
   // Generated TypeScript property: errors. The UI receives this list but does
   // not display or evaluate it yet.

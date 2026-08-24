@@ -134,7 +134,7 @@ The `.` at the end is important. It tells Docker to use the repo root as the bui
 7. Envoy's `grpc_web` filter translates the request for the native gRPC server.
 8. Envoy forwards the request to the `native_grpc_server` upstream.
 9. The response comes back through Envoy as `FaultCommandResponse`.
-10. If `FaultCommandResponse.result` is `FAULT_COMMAND_RESULT_SUCCESS`, the browser updates its local active fault display. If the result is `FAILURE` or `UNSPECIFIED`, the display is left unchanged.
+10. If `FaultCommandResponse.responseStatus.status` is `STATUS_SUCCESS`, the browser updates its local active fault display. If the status is `STATUS_FAILURE` or `STATUS_UNSPECIFIED`, the display is left unchanged.
 11. `FaultCommandResponse.errors` is generated and available to the browser, but the current UI intentionally ignores it.
 
 ## Service Contract
@@ -155,7 +155,7 @@ The UI expects the backend to implement `controlpanel.v1.FaultCoordinatorService
 
 The protobuf enum `FaultVariant` contains the variants shown in the UI: `High`, `Low`, and `Unknown`.
 
-Each command returns `FaultCommandResponse`, which contains a `FaultCommandResult` enum field named `result` and a repeated `FaultCommandError` field named `errors`. The UI currently treats only `FAULT_COMMAND_RESULT_SUCCESS` as successful and ignores the error list until the display needs richer failure details.
+Each command returns `FaultCommandResponse`, which contains a nested `ResponseStatus` message named `response_status` and a repeated `FaultCommandError` field named `errors`. The UI currently treats only `ResponseStatus.Status.STATUS_SUCCESS` as successful and ignores the error list until the display needs richer failure details.
 
 ## App Structure
 
