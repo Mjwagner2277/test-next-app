@@ -5,22 +5,22 @@ import {
   type Client,
 } from '@connectrpc/connect'
 import { createGrpcWebTransport } from '@connectrpc/connect-web'
-import { FaultCoordinatorService } from '../gen/proto/controlpanel/v1/control_panel_pb'
+import { SignalStimService } from '../gen/proto/controlpanel/v1/control_panel_pb'
 
 // Client<typeof Service> gives TypeScript methods that match the .proto file.
 // If the proto changes and you rerun `npm run proto:gen`, these method names
 // and request/response shapes update with it.
-export type FaultCoordinatorClient = Client<typeof FaultCoordinatorService>
+export type SignalStimClient = Client<typeof SignalStimService>
 
 type ClientOptions = {
   baseUrl: string
   authToken?: string
 }
 
-export function createFaultCoordinatorClient({
+export function createSignalStimClient({
   baseUrl,
   authToken,
-}: ClientOptions): FaultCoordinatorClient {
+}: ClientOptions): SignalStimClient {
   // ConnectRPC provides this gRPC-Web transport. The browser sends gRPC-Web to
   // Envoy, and Envoy translates that request to native gRPC for the upstream.
   const transport = createGrpcWebTransport({
@@ -38,7 +38,7 @@ export function createFaultCoordinatorClient({
       : [],
   })
 
-  return createClient(FaultCoordinatorService, transport)
+  return createClient(SignalStimService, transport)
 }
 
 export function describeRpcError(error: unknown): string {

@@ -2,9 +2,6 @@
 // @generated from file proto/controlpanel/v1/control_panel.proto (package controlpanel.v1, syntax proto3)
 /* eslint-disable */
 
-// The package becomes part of the generated TypeScript names and full RPC
-// method paths. Keep it stable once clients and servers depend on it.
-
 import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
 import { enumDesc, fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Message } from "@bufbuild/protobuf";
@@ -13,84 +10,122 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file proto/controlpanel/v1/control_panel.proto.
  */
 export const file_proto_controlpanel_v1_control_panel: GenFile = /*@__PURE__*/
-  fileDesc("Cilwcm90by9jb250cm9scGFuZWwvdjEvY29udHJvbF9wYW5lbC5wcm90bxIPY29udHJvbHBhbmVsLnYxInIKGEluamVjdFNlbnNvckZhdWx0UmVxdWVzdBIRCglzZW5zb3JfaWQYASABKAkSEwoLc2Vuc29yX25hbWUYAiABKAkSLgoHdmFyaWFudBgDIAEoDjIdLmNvbnRyb2xwYW5lbC52MS5GYXVsdFZhcmlhbnQiLAoXQ2xlYXJTZW5zb3JGYXVsdFJlcXVlc3QSEQoJc2Vuc29yX2lkGAEgASgJIhQKElJlc2V0U3lzdGVtUmVxdWVzdCKSAQoOUmVzcG9uc2VTdGF0dXMSNgoGc3RhdHVzGAEgASgOMiYuY29udHJvbHBhbmVsLnYxLlJlc3BvbnNlU3RhdHVzLlN0YXR1cyJICgZTdGF0dXMSFgoSU1RBVFVTX1VOU1BFQ0lGSUVEEAASEgoOU1RBVFVTX1NVQ0NFU1MQARISCg5TVEFUVVNfRkFJTFVSRRACIk0KEUZhdWx0Q29tbWFuZEVycm9yEhkKEWF0dGVtcHRlZF9jb21tYW5kGAEgASgJEgwKBGNvZGUYAiABKAkSDwoHbWVzc2FnZRgDIAEoCSKEAQoURmF1bHRDb21tYW5kUmVzcG9uc2USOAoPcmVzcG9uc2Vfc3RhdHVzGAEgASgLMh8uY29udHJvbHBhbmVsLnYxLlJlc3BvbnNlU3RhdHVzEjIKBmVycm9ycxgCIAMoCzIiLmNvbnRyb2xwYW5lbC52MS5GYXVsdENvbW1hbmRFcnJvcip3CgxGYXVsdFZhcmlhbnQSHQoZRkFVTFRfVkFSSUFOVF9VTlNQRUNJRklFRBAAEhYKEkZBVUxUX1ZBUklBTlRfSElHSBABEhUKEUZBVUxUX1ZBUklBTlRfTE9XEAISGQoVRkFVTFRfVkFSSUFOVF9VTktOT1dOEAMyugIKF0ZhdWx0Q29vcmRpbmF0b3JTZXJ2aWNlEmUKEUluamVjdFNlbnNvckZhdWx0EikuY29udHJvbHBhbmVsLnYxLkluamVjdFNlbnNvckZhdWx0UmVxdWVzdBolLmNvbnRyb2xwYW5lbC52MS5GYXVsdENvbW1hbmRSZXNwb25zZRJjChBDbGVhclNlbnNvckZhdWx0EiguY29udHJvbHBhbmVsLnYxLkNsZWFyU2Vuc29yRmF1bHRSZXF1ZXN0GiUuY29udHJvbHBhbmVsLnYxLkZhdWx0Q29tbWFuZFJlc3BvbnNlElMKC1Jlc2V0U3lzdGVtEiMuY29udHJvbHBhbmVsLnYxLlJlc2V0U3lzdGVtUmVxdWVzdBofLmNvbnRyb2xwYW5lbC52MS5SZXNwb25zZVN0YXR1c2IGcHJvdG8z");
+  fileDesc("Cilwcm90by9jb250cm9scGFuZWwvdjEvY29udHJvbF9wYW5lbC5wcm90bxIPY29udHJvbHBhbmVsLnYxIpMBCgZTaWduYWwSEQoJc2lnbmFsX2lkGAEgASgEEi4KCmNhcmRfbW9kZWwYAiABKA4yGi5jb250cm9scGFuZWwudjEuQ2FyZE1vZGVsEhIKCGRpc2NyZXRlGAMgASgISAASEAoGYW5hbG9nGAQgASgNSAASEAoGc2VyaWFsGAUgASgJSABCDgoMc2lnbmFsX3ZhbHVlIjoKDlNpZ25hbHNSZXF1ZXN0EigKB3NpZ25hbHMYASADKAsyFy5jb250cm9scGFuZWwudjEuU2lnbmFsIk0KC1NpZ25hbEVycm9yEicKBnNpZ25hbBgBIAEoCzIXLmNvbnRyb2xwYW5lbC52MS5TaWduYWwSFQoNc2lnbmFsX2Vycm9ycxgCIAMoCSKAAQoPU2lnbmFsc1Jlc3BvbnNlEjgKD3Jlc3BvbnNlX3N0YXR1cxgBIAEoCzIfLmNvbnRyb2xwYW5lbC52MS5SZXNwb25zZVN0YXR1cxIzCg1zaWduYWxfZXJyb3JzGAIgAygLMhwuY29udHJvbHBhbmVsLnYxLlNpZ25hbEVycm9yIjkKDlJlc3BvbnNlU3RhdHVzEicKBnN0YXR1cxgBIAEoDjIXLmNvbnRyb2xwYW5lbC52MS5TdGF0dXMiBwoFRW1wdHkqMAoGU3RhdHVzEhIKDlNUQVRVU19TVUNDRVNTEAASEgoOU1RBVFVTX0ZBSUxVUkUQASo3CglDYXJkTW9kZWwSFAoQQ0FSRF9NT0RFTF9UWVBFMRAAEhQKEENBUkRfTU9ERUxfVFlQRTIQATL8AQoRU2lnbmFsU3RpbVNlcnZpY2USTgoJU2V0U2lnbmFsEh8uY29udHJvbHBhbmVsLnYxLlNpZ25hbHNSZXF1ZXN0GiAuY29udHJvbHBhbmVsLnYxLlNpZ25hbHNSZXNwb25zZRJSCg1SZW1vdmVTaWduYWxzEh8uY29udHJvbHBhbmVsLnYxLlNpZ25hbHNSZXF1ZXN0GiAuY29udHJvbHBhbmVsLnYxLlNpZ25hbHNSZXNwb25zZRJDCghSZXNldEFsbBIWLmNvbnRyb2xwYW5lbC52MS5FbXB0eRofLmNvbnRyb2xwYW5lbC52MS5SZXNwb25zZVN0YXR1c2IGcHJvdG8z");
 
 /**
- * @generated from message controlpanel.v1.InjectSensorFaultRequest
+ * @generated from message controlpanel.v1.Signal
  */
-export type InjectSensorFaultRequest = Message<"controlpanel.v1.InjectSensorFaultRequest"> & {
+export type Signal = Message<"controlpanel.v1.Signal"> & {
   /**
-   * Stable machine-readable id for the sensor row, for example "pressure-b".
-   *
-   * @generated from field: string sensor_id = 1;
+   * @generated from field: uint64 signal_id = 1;
    */
-  sensorId: string;
+  signalId: bigint;
 
   /**
-   * Human-readable display name. The server can ignore this if it already owns
-   * the sensor catalog, but it is convenient in starter/demo environments.
-   *
-   * @generated from field: string sensor_name = 2;
+   * @generated from field: controlpanel.v1.CardModel card_model = 2;
    */
-  sensorName: string;
+  cardModel: CardModel;
 
   /**
-   * Generated TypeScript property: variant.
-   *
-   * @generated from field: controlpanel.v1.FaultVariant variant = 3;
+   * @generated from oneof controlpanel.v1.Signal.signal_value
    */
-  variant: FaultVariant;
+  signalValue: {
+    /**
+     * @generated from field: bool discrete = 3;
+     */
+    value: boolean;
+    case: "discrete";
+  } | {
+    /**
+     * @generated from field: uint32 analog = 4;
+     */
+    value: number;
+    case: "analog";
+  } | {
+    /**
+     * @generated from field: string serial = 5;
+     */
+    value: string;
+    case: "serial";
+  } | { case: undefined; value?: undefined };
 };
 
 /**
- * Describes the message controlpanel.v1.InjectSensorFaultRequest.
- * Use `create(InjectSensorFaultRequestSchema)` to create a new message.
+ * Describes the message controlpanel.v1.Signal.
+ * Use `create(SignalSchema)` to create a new message.
  */
-export const InjectSensorFaultRequestSchema: GenMessage<InjectSensorFaultRequest> = /*@__PURE__*/
+export const SignalSchema: GenMessage<Signal> = /*@__PURE__*/
   messageDesc(file_proto_controlpanel_v1_control_panel, 0);
 
 /**
- * @generated from message controlpanel.v1.ClearSensorFaultRequest
+ * @generated from message controlpanel.v1.SignalsRequest
  */
-export type ClearSensorFaultRequest = Message<"controlpanel.v1.ClearSensorFaultRequest"> & {
+export type SignalsRequest = Message<"controlpanel.v1.SignalsRequest"> & {
   /**
-   * Clears whichever variant is currently active for this sensor.
-   *
-   * @generated from field: string sensor_id = 1;
+   * @generated from field: repeated controlpanel.v1.Signal signals = 1;
    */
-  sensorId: string;
+  signals: Signal[];
 };
 
 /**
- * Describes the message controlpanel.v1.ClearSensorFaultRequest.
- * Use `create(ClearSensorFaultRequestSchema)` to create a new message.
+ * Describes the message controlpanel.v1.SignalsRequest.
+ * Use `create(SignalsRequestSchema)` to create a new message.
  */
-export const ClearSensorFaultRequestSchema: GenMessage<ClearSensorFaultRequest> = /*@__PURE__*/
+export const SignalsRequestSchema: GenMessage<SignalsRequest> = /*@__PURE__*/
   messageDesc(file_proto_controlpanel_v1_control_panel, 1);
 
 /**
- * @generated from message controlpanel.v1.ResetSystemRequest
+ * @generated from message controlpanel.v1.SignalError
  */
-export type ResetSystemRequest = Message<"controlpanel.v1.ResetSystemRequest"> & {
+export type SignalError = Message<"controlpanel.v1.SignalError"> & {
+  /**
+   * @generated from field: controlpanel.v1.Signal signal = 1;
+   */
+  signal?: Signal | undefined;
+
+  /**
+   * @generated from field: repeated string signal_errors = 2;
+   */
+  signalErrors: string[];
 };
 
 /**
- * Describes the message controlpanel.v1.ResetSystemRequest.
- * Use `create(ResetSystemRequestSchema)` to create a new message.
+ * Describes the message controlpanel.v1.SignalError.
+ * Use `create(SignalErrorSchema)` to create a new message.
  */
-export const ResetSystemRequestSchema: GenMessage<ResetSystemRequest> = /*@__PURE__*/
+export const SignalErrorSchema: GenMessage<SignalError> = /*@__PURE__*/
   messageDesc(file_proto_controlpanel_v1_control_panel, 2);
+
+/**
+ * @generated from message controlpanel.v1.SignalsResponse
+ */
+export type SignalsResponse = Message<"controlpanel.v1.SignalsResponse"> & {
+  /**
+   * @generated from field: controlpanel.v1.ResponseStatus response_status = 1;
+   */
+  responseStatus?: ResponseStatus | undefined;
+
+  /**
+   * @generated from field: repeated controlpanel.v1.SignalError signal_errors = 2;
+   */
+  signalErrors: SignalError[];
+};
+
+/**
+ * Describes the message controlpanel.v1.SignalsResponse.
+ * Use `create(SignalsResponseSchema)` to create a new message.
+ */
+export const SignalsResponseSchema: GenMessage<SignalsResponse> = /*@__PURE__*/
+  messageDesc(file_proto_controlpanel_v1_control_panel, 3);
 
 /**
  * @generated from message controlpanel.v1.ResponseStatus
  */
 export type ResponseStatus = Message<"controlpanel.v1.ResponseStatus"> & {
   /**
-   * Generated TypeScript property: status.
-   *
-   * @generated from field: controlpanel.v1.ResponseStatus.Status status = 1;
+   * @generated from field: controlpanel.v1.Status status = 1;
    */
-  status: ResponseStatus_Status;
+  status: Status;
 };
 
 /**
@@ -98,177 +133,89 @@ export type ResponseStatus = Message<"controlpanel.v1.ResponseStatus"> & {
  * Use `create(ResponseStatusSchema)` to create a new message.
  */
 export const ResponseStatusSchema: GenMessage<ResponseStatus> = /*@__PURE__*/
-  messageDesc(file_proto_controlpanel_v1_control_panel, 3);
-
-/**
- * The enum is intentionally nested under ResponseStatus to mirror backends
- * that wrap status metadata in an object instead of returning the enum as a
- * direct field on the command response.
- *
- * @generated from enum controlpanel.v1.ResponseStatus.Status
- */
-export enum ResponseStatus_Status {
-  /**
-   * @generated from enum value: STATUS_UNSPECIFIED = 0;
-   */
-  UNSPECIFIED = 0,
-
-  /**
-   * @generated from enum value: STATUS_SUCCESS = 1;
-   */
-  SUCCESS = 1,
-
-  /**
-   * @generated from enum value: STATUS_FAILURE = 2;
-   */
-  FAILURE = 2,
-}
-
-/**
- * Describes the enum controlpanel.v1.ResponseStatus.Status.
- */
-export const ResponseStatus_StatusSchema: GenEnum<ResponseStatus_Status> = /*@__PURE__*/
-  enumDesc(file_proto_controlpanel_v1_control_panel, 3, 0);
-
-/**
- * @generated from message controlpanel.v1.FaultCommandError
- */
-export type FaultCommandError = Message<"controlpanel.v1.FaultCommandError"> & {
-  /**
-   * Identifies the attempted command or command item that produced this error.
-   * For a single-command UI this can be the RPC name; for future batch requests
-   * it can identify the individual item that failed.
-   *
-   * @generated from field: string attempted_command = 1;
-   */
-  attemptedCommand: string;
-
-  /**
-   * Machine-readable backend error code. The UI ignores this for now, but it is
-   * useful for future filtering, mapping, or operator-facing details.
-   *
-   * @generated from field: string code = 2;
-   */
-  code: string;
-
-  /**
-   * Human-readable backend error detail. The current screen does not display
-   * these yet because command success/failure is driven by response_status.
-   *
-   * @generated from field: string message = 3;
-   */
-  message: string;
-};
-
-/**
- * Describes the message controlpanel.v1.FaultCommandError.
- * Use `create(FaultCommandErrorSchema)` to create a new message.
- */
-export const FaultCommandErrorSchema: GenMessage<FaultCommandError> = /*@__PURE__*/
   messageDesc(file_proto_controlpanel_v1_control_panel, 4);
 
 /**
- * @generated from message controlpanel.v1.FaultCommandResponse
+ * @generated from message controlpanel.v1.Empty
  */
-export type FaultCommandResponse = Message<"controlpanel.v1.FaultCommandResponse"> & {
-  /**
-   * Generated TypeScript property: responseStatus.
-   *
-   * @generated from field: controlpanel.v1.ResponseStatus response_status = 1;
-   */
-  responseStatus?: ResponseStatus | undefined;
-
-  /**
-   * Generated TypeScript property: errors. The UI receives this list but does
-   * not display or evaluate it yet.
-   *
-   * @generated from field: repeated controlpanel.v1.FaultCommandError errors = 2;
-   */
-  errors: FaultCommandError[];
+export type Empty = Message<"controlpanel.v1.Empty"> & {
 };
 
 /**
- * Describes the message controlpanel.v1.FaultCommandResponse.
- * Use `create(FaultCommandResponseSchema)` to create a new message.
+ * Describes the message controlpanel.v1.Empty.
+ * Use `create(EmptySchema)` to create a new message.
  */
-export const FaultCommandResponseSchema: GenMessage<FaultCommandResponse> = /*@__PURE__*/
+export const EmptySchema: GenMessage<Empty> = /*@__PURE__*/
   messageDesc(file_proto_controlpanel_v1_control_panel, 5);
 
 /**
- * The UI exposes these exact fault choices in a select control. Keeping them as
- * a protobuf enum avoids accidental spelling drift between the frontend and
- * backend.
- *
- * @generated from enum controlpanel.v1.FaultVariant
+ * @generated from enum controlpanel.v1.Status
  */
-export enum FaultVariant {
+export enum Status {
   /**
-   * @generated from enum value: FAULT_VARIANT_UNSPECIFIED = 0;
+   * @generated from enum value: STATUS_SUCCESS = 0;
    */
-  UNSPECIFIED = 0,
+  SUCCESS = 0,
 
   /**
-   * @generated from enum value: FAULT_VARIANT_HIGH = 1;
+   * @generated from enum value: STATUS_FAILURE = 1;
    */
-  HIGH = 1,
-
-  /**
-   * @generated from enum value: FAULT_VARIANT_LOW = 2;
-   */
-  LOW = 2,
-
-  /**
-   * @generated from enum value: FAULT_VARIANT_UNKNOWN = 3;
-   */
-  UNKNOWN = 3,
+  FAILURE = 1,
 }
 
 /**
- * Describes the enum controlpanel.v1.FaultVariant.
+ * Describes the enum controlpanel.v1.Status.
  */
-export const FaultVariantSchema: GenEnum<FaultVariant> = /*@__PURE__*/
+export const StatusSchema: GenEnum<Status> = /*@__PURE__*/
   enumDesc(file_proto_controlpanel_v1_control_panel, 0);
 
 /**
- * This service is the contract shared by the UI and the native gRPC server. The
- * React app never hand-builds URLs for these calls; ConnectRPC uses this
- * generated service descriptor to know each method name and request/response
- * type.
- *
- * @generated from service controlpanel.v1.FaultCoordinatorService
+ * @generated from enum controlpanel.v1.CardModel
  */
-export const FaultCoordinatorService: GenService<{
+export enum CardModel {
   /**
-   * Inserts one selected sensor fault. The UI supplies both the sensor and the
-   * selected fault variant from the matrix row.
-   *
-   * @generated from rpc controlpanel.v1.FaultCoordinatorService.InjectSensorFault
+   * @generated from enum value: CARD_MODEL_TYPE1 = 0;
    */
-  injectSensorFault: {
+  TYPE1 = 0,
+
+  /**
+   * @generated from enum value: CARD_MODEL_TYPE2 = 1;
+   */
+  TYPE2 = 1,
+}
+
+/**
+ * Describes the enum controlpanel.v1.CardModel.
+ */
+export const CardModelSchema: GenEnum<CardModel> = /*@__PURE__*/
+  enumDesc(file_proto_controlpanel_v1_control_panel, 1);
+
+/**
+ * @generated from service controlpanel.v1.SignalStimService
+ */
+export const SignalStimService: GenService<{
+  /**
+   * @generated from rpc controlpanel.v1.SignalStimService.SetSignal
+   */
+  setSignal: {
     methodKind: "unary";
-    input: typeof InjectSensorFaultRequestSchema;
-    output: typeof FaultCommandResponseSchema;
+    input: typeof SignalsRequestSchema;
+    output: typeof SignalsResponseSchema;
   },
   /**
-   * Clears one sensor fault without resetting every injected condition.
-   *
-   * @generated from rpc controlpanel.v1.FaultCoordinatorService.ClearSensorFault
+   * @generated from rpc controlpanel.v1.SignalStimService.RemoveSignals
    */
-  clearSensorFault: {
+  removeSignals: {
     methodKind: "unary";
-    input: typeof ClearSensorFaultRequestSchema;
-    output: typeof FaultCommandResponseSchema;
+    input: typeof SignalsRequestSchema;
+    output: typeof SignalsResponseSchema;
   },
   /**
-   * Clears all injected faults and asks the coordinator to return the system to
-   * its baseline state. This method returns the status wrapper directly because
-   * some backends do not attach per-command error details to reset commands.
-   *
-   * @generated from rpc controlpanel.v1.FaultCoordinatorService.ResetSystem
+   * @generated from rpc controlpanel.v1.SignalStimService.ResetAll
    */
-  resetSystem: {
+  resetAll: {
     methodKind: "unary";
-    input: typeof ResetSystemRequestSchema;
+    input: typeof EmptySchema;
     output: typeof ResponseStatusSchema;
   },
 }> = /*@__PURE__*/

@@ -1,6 +1,6 @@
 # test-next-app
 
-A Next.js + TypeScript sensor fault interface for calling a server-hosted gRPC service through Envoy with gRPC-Web.
+A Next.js + TypeScript signal-stim interface for calling a server-hosted gRPC service through Envoy with gRPC-Web.
 
 ## Stack
 
@@ -32,15 +32,15 @@ In Kubernetes, Envoy is deployed by the Helm chart and listens for browser gRPC-
 
 The main screen is a 27-inch-display-oriented sensor fault matrix.
 
-- Each row represents one sensor, such as `Pressure B` or `Flow D`.
+- Each row represents one signal-backed sensor, such as `Temperature A` or `Interlock B`.
 - The `Fault variant` column lets an operator choose `High`, `Low`, or `Unknown`.
 - The row action button calls the configured gRPC-Web service through ConnectRPC.
 - Inserted faults are highlighted in the table.
 - The header chip shows the total number of faults currently in the system.
 - The right-side panel lists the active faults tracked by this browser session.
-- `System reset` calls the reset RPC and clears all injected faults when the response enum is `SUCCESS`.
+- `System reset` calls `ResetAll` and clears all injected faults when the response enum is `SUCCESS`.
 
-The page starts with a couple of seeded active faults so the injected state is visible during UI review even if no local gRPC server is running yet. Because this proto does not include a fault-state query response, the UI cannot reload active faults from the backend after a page refresh. It updates the display locally after successful command responses.
+The page starts with two sample rows and no active faults. Because this proto does not include a fault-state query response, the UI cannot reload active faults from the backend after a page refresh. It updates the display locally after successful command responses.
 
 ## Configuration
 
@@ -133,9 +133,9 @@ The `.` at the end is important. It tells Docker to use the repo root as the bui
 6. Envoy receives that browser-compatible request on port `8080`.
 7. Envoy's `grpc_web` filter translates the request for the native gRPC server.
 8. Envoy forwards the request to the `native_grpc_server` upstream.
-9. The response comes back through Envoy as either `FaultCommandResponse` for inject/clear or `ResponseStatus` for reset.
-10. If the normalized response status is `STATUS_SUCCESS`, the browser updates its local active fault display. If the status is `STATUS_FAILURE` or `STATUS_UNSPECIFIED`, the display is left unchanged.
-11. `FaultCommandResponse.errors` is generated and available to the browser for inject/clear responses, but the current UI intentionally ignores it.
+9. The response comes back through Envoy as either `SignalsResponse` for set/remove or `ResponseStatus` for reset.
+10. If the response status is `STATUS_SUCCESS`, the browser updates its local active fault display. If the status is `STATUS_FAILURE`, the display is left unchanged.
+11. `SignalsResponse.signal_errors` is generated and available to the browser for set/remove responses, but the current UI intentionally ignores it.
 
 ## Service Contract
 
@@ -147,15 +147,15 @@ The generated TypeScript lives under `src/gen` and is created with:
 npm run proto:gen
 ```
 
-The UI expects the backend to implement `controlpanel.v1.FaultCoordinatorService`:
+The UI expects the backend to implement `controlpanel.v1.SignalStimService`:
 
-- `InjectSensorFault` inserts one sensor fault with a selected `FaultVariant`.
-- `ClearSensorFault` removes one active sensor fault.
-- `ResetSystem` accepts an empty `ResetSystemRequest`, clears all injected sensor faults, and returns `ResponseStatus` directly.
+- `SetSignal` sends a `SignalsRequest` with one mapped `Signal`.
+- `RemoveSignals` sends a `SignalsRequest` with one mapped `Signal`.
+- `ResetAll` accepts an empty `Empty` request, clears all injected signals, and returns `ResponseStatus` directly.
 
-The protobuf enum `FaultVariant` contains the variants shown in the UI: `High`, `Low`, and `Unknown`.
+The UI still shows friendly variants: `High`, `Low`, and `Unknown`. `src/features/faults/faultModel.ts` maps those choices to generated `Signal` fields such as `signalId`, `cardModel`, and the `signalValue` oneof.
 
-`InjectSensorFault` and `ClearSensorFault` return `FaultCommandResponse`, which contains a nested `ResponseStatus` message named `response_status` and a repeated `FaultCommandError` field named `errors`. `ResetSystem` returns `ResponseStatus` directly. The UI currently treats only `ResponseStatus.Status.STATUS_SUCCESS` as successful and ignores the error list until the display needs richer failure details.
+`SetSignal` and `RemoveSignals` return `SignalsResponse`, which contains a nested `ResponseStatus` message named `response_status` and repeated `SignalError` entries named `signal_errors`. `ResetAll` returns `ResponseStatus` directly. The UI currently treats only `Status.STATUS_SUCCESS` as successful and ignores the error list until the display needs richer failure details.
 
 ## App Structure
 

@@ -1,90 +1,50 @@
 syntax = "proto3";
 
-// The package becomes part of the generated TypeScript names and full RPC
-// method paths. Keep it stable once clients and servers depend on it.
 package controlpanel.v1;
 
-// This service is the contract shared by the UI and the native gRPC server. The
-// React app never hand-builds URLs for these calls; ConnectRPC uses this
-// generated service descriptor to know each method name and request/response
-// type.
-service FaultCoordinatorService {
-  // Inserts one selected sensor fault. The UI supplies both the sensor and the
-  // selected fault variant from the matrix row.
-  rpc InjectSensorFault(InjectSensorFaultRequest) returns (FaultCommandResponse);
-
-  // Clears one sensor fault without resetting every injected condition.
-  rpc ClearSensorFault(ClearSensorFaultRequest) returns (FaultCommandResponse);
-
-  // Clears all injected faults and asks the coordinator to return the system to
-  // its baseline state. This method returns the status wrapper directly because
-  // some backends do not attach per-command error details to reset commands.
-  rpc ResetSystem(ResetSystemRequest) returns (ResponseStatus);
+service SignalStimService {
+  rpc SetSignal(SignalsRequest) returns (SignalsResponse);
+  rpc RemoveSignals(SignalsRequest) returns (SignalsResponse);
+  rpc ResetAll(Empty) returns (ResponseStatus);
 }
 
-// The UI exposes these exact fault choices in a select control. Keeping them as
-// a protobuf enum avoids accidental spelling drift between the frontend and
-// backend.
-enum FaultVariant {
-  FAULT_VARIANT_UNSPECIFIED = 0;
-  FAULT_VARIANT_HIGH = 1;
-  FAULT_VARIANT_LOW = 2;
-  FAULT_VARIANT_UNKNOWN = 3;
+enum Status {
+  STATUS_SUCCESS = 0;
+  STATUS_FAILURE = 1;
 }
 
-message InjectSensorFaultRequest {
-  // Stable machine-readable id for the sensor row, for example "pressure-b".
-  string sensor_id = 1;
-
-  // Human-readable display name. The server can ignore this if it already owns
-  // the sensor catalog, but it is convenient in starter/demo environments.
-  string sensor_name = 2;
-
-  // Generated TypeScript property: variant.
-  FaultVariant variant = 3;
+enum CardModel {
+  CARD_MODEL_TYPE1 = 0;
+  CARD_MODEL_TYPE2 = 1;
 }
 
-message ClearSensorFaultRequest {
-  // Clears whichever variant is currently active for this sensor.
-  string sensor_id = 1;
+message Signal {
+  uint64 signal_id = 1;
+  CardModel card_model = 2;
+
+  oneof signal_value {
+    bool discrete = 3;
+    uint32 analog = 4;
+    string serial = 5;
+  }
 }
 
-message ResetSystemRequest {}
+message SignalsRequest {
+  repeated Signal signals = 1;
+}
+
+message SignalError {
+  Signal signal = 1;
+  repeated string signal_errors = 2;
+}
+
+message SignalsResponse {
+  ResponseStatus response_status = 1;
+  repeated SignalError signal_errors = 2;
+}
 
 message ResponseStatus {
-  // The enum is intentionally nested under ResponseStatus to mirror backends
-  // that wrap status metadata in an object instead of returning the enum as a
-  // direct field on the command response.
-  enum Status {
-    STATUS_UNSPECIFIED = 0;
-    STATUS_SUCCESS = 1;
-    STATUS_FAILURE = 2;
-  }
-
-  // Generated TypeScript property: status.
   Status status = 1;
 }
 
-message FaultCommandError {
-  // Identifies the attempted command or command item that produced this error.
-  // For a single-command UI this can be the RPC name; for future batch requests
-  // it can identify the individual item that failed.
-  string attempted_command = 1;
-
-  // Machine-readable backend error code. The UI ignores this for now, but it is
-  // useful for future filtering, mapping, or operator-facing details.
-  string code = 2;
-
-  // Human-readable backend error detail. The current screen does not display
-  // these yet because command success/failure is driven by response_status.
-  string message = 3;
-}
-
-message FaultCommandResponse {
-  // Generated TypeScript property: responseStatus.
-  ResponseStatus response_status = 1;
-
-  // Generated TypeScript property: errors. The UI receives this list but does
-  // not display or evaluate it yet.
-  repeated FaultCommandError errors = 2;
-}
+message Empty {}

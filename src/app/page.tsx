@@ -1,8 +1,8 @@
-import { ClientOnlyControlPanel } from './ClientOnlyControlPanel'
+import { ControlPanelConsole } from './ControlPanelConsole'
 
 // This is the app-router home route for "/". The implementation lives in a
-// separate client-only component because the operator console depends on
-// browser-side MUI style insertion, runtime config fetches, and gRPC-Web calls.
+// client component because the operator console depends on runtime config
+// fetches, React state, and browser-side gRPC-Web calls.
 export default function Home() {
-  return <ClientOnlyControlPanel />
+  return <ControlPanelConsole />
 }

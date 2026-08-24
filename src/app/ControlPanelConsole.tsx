@@ -14,16 +14,16 @@ import {
   INITIAL_ACTIVE_FAULTS,
   SENSOR_ROWS,
   defaultSelectedVariants,
-  isFaultCommandSuccessful,
   isResponseStatusSuccessful,
-  toProtoVariant,
+  isSignalsResponseSuccessful,
+  toSignal,
   upsertActiveFault,
   type RpcRunOptions,
   type SensorRow,
   type UiFaultVariant,
 } from '@/features/faults/faultModel'
 import {
-  createFaultCoordinatorClient,
+  createSignalStimClient,
   describeRpcError,
 } from '@/rpc/faultCoordinatorClient'
 import { useGrpcWebConfig } from '@/rpc/useGrpcWebConfig'
@@ -50,7 +50,7 @@ export function ControlPanelConsole() {
   // on every select change. It only changes after runtime config loads.
   const client = useMemo(
     () =>
-      grpcWebConfig ? createFaultCoordinatorClient(grpcWebConfig) : null,
+      grpcWebConfig ? createSignalStimClient(grpcWebConfig) : null,
     [grpcWebConfig],
   )
 
@@ -107,12 +107,10 @@ export function ControlPanelConsole() {
     void runRpc({
       name: `Inject ${sensor.name} ${variant}`,
       call: () =>
-        requireClient().injectSensorFault({
-          sensorId: sensor.id,
-          sensorName: sensor.name,
-          variant: toProtoVariant(variant),
+        requireClient().setSignal({
+          signals: [toSignal(sensor, variant)],
         }),
-      isSuccessful: isFaultCommandSuccessful,
+      isSuccessful: isSignalsResponseSuccessful,
       onSuccess: () => {
         setActiveFaults((current) =>
           upsertActiveFault(current, {
@@ -128,10 +126,17 @@ export function ControlPanelConsole() {
   }
 
   function clearFault(sensor: SensorRow) {
+    const activeVariant =
+      activeFaultBySensorId.get(sensor.id)?.variant ??
+      selectedVariants[sensor.id]
+
     void runRpc({
       name: `Clear ${sensor.name}`,
-      call: () => requireClient().clearSensorFault({ sensorId: sensor.id }),
-      isSuccessful: isFaultCommandSuccessful,
+      call: () =>
+        requireClient().removeSignals({
+          signals: [toSignal(sensor, activeVariant)],
+        }),
+      isSuccessful: isSignalsResponseSuccessful,
       onSuccess: () => {
         setActiveFaults((current) =>
           current.filter((fault) => fault.sensorId !== sensor.id),
@@ -142,8 +147,8 @@ export function ControlPanelConsole() {
 
   function resetSystem() {
     void runRpc({
-      name: 'ResetSystem',
-      call: () => requireClient().resetSystem({}),
+      name: 'ResetAll',
+      call: () => requireClient().resetAll({}),
       isSuccessful: isResponseStatusSuccessful,
       onSuccess: () => setActiveFaults([]),
     })
