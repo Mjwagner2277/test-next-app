@@ -162,14 +162,7 @@ export function ControlPanelConsole() {
   }
 
   function resetSystem() {
-    void runRpc({
-      name: 'System reset',
-      // The current proto only exposes resetAll. Keeping this in a separate
-      // handler makes it straightforward to swap in a system-specific RPC later.
-      call: () => requireClient().resetAll({}),
-      isSuccessful: isResponseStatusSuccessful,
-      onSuccess: () => setActiveFaults([]),
-    })
+    // Intentionally blank until the proto exposes a system reset RPC.
   }
 
   return (
