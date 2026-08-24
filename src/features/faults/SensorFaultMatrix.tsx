@@ -120,6 +120,12 @@ export function SensorFaultMatrix({
                     fullWidth
                     size="small"
                     value={selectedVariants[sensor.id]}
+                    displayEmpty
+                    renderValue={(selected) =>
+                      typeof selected === 'string' && selected.length > 0
+                        ? selected
+                        : 'Select fault'
+                    }
                     onChange={(event) =>
                       onSelectVariant(
                         sensor.id,
