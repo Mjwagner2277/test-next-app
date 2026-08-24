@@ -88,7 +88,7 @@ export function SensorFaultMatrix({
             <TableCell>Sensor</TableCell>
             <TableCell>Live reading</TableCell>
             <TableCell>Fault variant</TableCell>
-            <TableCell>In system</TableCell>
+            <TableCell align="center">In system</TableCell>
             <TableCell>Action</TableCell>
           </TableRow>
         </TableHead>
@@ -137,7 +137,7 @@ export function SensorFaultMatrix({
                     ))}
                   </Select>
                 </TableCell>
-                <TableCell>
+                <TableCell align="center" sx={{ width: 160 }}>
                   <Chip
                     size="small"
                     label={
