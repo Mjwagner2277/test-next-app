@@ -49,11 +49,7 @@ message ClearSensorFaultRequest {
   string sensor_id = 1;
 }
 
-message ResetSystemRequest {
-  // Lets the caller describe the reset intent without introducing more enum
-  // surface area before the backend contract is final.
-  string scope = 1;
-}
+message ResetSystemRequest {}
 
 message ResponseStatus {
   // The enum is intentionally nested under ResponseStatus to mirror backends

@@ -151,7 +151,7 @@ The UI expects the backend to implement `controlpanel.v1.FaultCoordinatorService
 
 - `InjectSensorFault` inserts one sensor fault with a selected `FaultVariant`.
 - `ClearSensorFault` removes one active sensor fault.
-- `ResetSystem` clears all injected sensor faults and returns `ResponseStatus` directly.
+- `ResetSystem` accepts an empty `ResetSystemRequest`, clears all injected sensor faults, and returns `ResponseStatus` directly.
 
 The protobuf enum `FaultVariant` contains the variants shown in the UI: `High`, `Low`, and `Unknown`.
 

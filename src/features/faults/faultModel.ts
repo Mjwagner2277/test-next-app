@@ -23,9 +23,10 @@ export type ActiveFault = {
   detail: string
 }
 
-export type RpcRunOptions = {
+export type RpcRunOptions<Response> = {
   name: string
-  call: () => Promise<FaultCommandResponse | ResponseStatus>
+  call: () => Promise<Response>
+  isSuccessful: (response: Response) => boolean
   onSuccess?: () => void
 }
 
@@ -123,15 +124,14 @@ export function upsertActiveFault(
   return [nextFault, ...remaining]
 }
 
-export function isCommandSuccessful(
-  response: FaultCommandResponse | ResponseStatus,
-) {
-  // Inject and clear return FaultCommandResponse, which wraps ResponseStatus.
-  // Reset returns ResponseStatus directly. The UI only needs the final status
-  // enum, so normalize both shapes into the same boolean.
-  if ('status' in response) {
-    return response.status === ResponseStatus_Status.SUCCESS
-  }
+export function isFaultCommandSuccessful(response: FaultCommandResponse) {
+  // Inject and clear return the full command response. It can include an errors
+  // list, but this first UI pass only gates local state on the nested status.
+  return isResponseStatusSuccessful(response.responseStatus)
+}
 
-  return response.responseStatus?.status === ResponseStatus_Status.SUCCESS
+export function isResponseStatusSuccessful(responseStatus?: ResponseStatus) {
+  // Reset returns ResponseStatus directly. Optional input also covers the
+  // missing response_status case on FaultCommandResponse.
+  return responseStatus?.status === ResponseStatus_Status.SUCCESS
 }

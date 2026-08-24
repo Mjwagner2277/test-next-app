@@ -14,7 +14,8 @@ import {
   INITIAL_ACTIVE_FAULTS,
   SENSOR_ROWS,
   defaultSelectedVariants,
-  isCommandSuccessful,
+  isFaultCommandSuccessful,
+  isResponseStatusSuccessful,
   toProtoVariant,
   upsertActiveFault,
   type RpcRunOptions,
@@ -76,19 +77,20 @@ export function ControlPanelConsole() {
     return client
   }
 
-  async function runRpc({
+  async function runRpc<Response>({
     name,
     call,
+    isSuccessful,
     onSuccess,
-  }: RpcRunOptions) {
+  }: RpcRunOptions<Response>) {
     setPendingAction(name)
 
     try {
       const response = await call()
-      const commandSucceeded = isCommandSuccessful(response)
+      const commandSucceeded = isSuccessful(response)
 
-      // Inject/clear can include error details and reset returns status
-      // directly. isCommandSuccessful normalizes those shapes to one boolean.
+      // Each RPC response shape owns its own success check. This keeps reset's
+      // bare ResponseStatus from leaking into the fault-command response path.
       if (commandSucceeded) {
         onSuccess?.()
       }
@@ -110,6 +112,7 @@ export function ControlPanelConsole() {
           sensorName: sensor.name,
           variant: toProtoVariant(variant),
         }),
+      isSuccessful: isFaultCommandSuccessful,
       onSuccess: () => {
         setActiveFaults((current) =>
           upsertActiveFault(current, {
@@ -128,6 +131,7 @@ export function ControlPanelConsole() {
     void runRpc({
       name: `Clear ${sensor.name}`,
       call: () => requireClient().clearSensorFault({ sensorId: sensor.id }),
+      isSuccessful: isFaultCommandSuccessful,
       onSuccess: () => {
         setActiveFaults((current) =>
           current.filter((fault) => fault.sensorId !== sensor.id),
@@ -139,8 +143,8 @@ export function ControlPanelConsole() {
   function resetSystem() {
     void runRpc({
       name: 'ResetSystem',
-      call: () =>
-        requireClient().resetSystem({ scope: 'ALL_INJECTED_SENSOR_FAULTS' }),
+      call: () => requireClient().resetSystem({}),
+      isSuccessful: isResponseStatusSuccessful,
       onSuccess: () => setActiveFaults([]),
     })
   }
