@@ -152,9 +152,20 @@ export function ControlPanelConsole() {
     })
   }
 
+  function resetFaults() {
+    void runRpc({
+      name: 'Reset faults',
+      call: () => requireClient().resetAll({}),
+      isSuccessful: isResponseStatusSuccessful,
+      onSuccess: () => setActiveFaults([]),
+    })
+  }
+
   function resetSystem() {
     void runRpc({
-      name: 'ResetAll',
+      name: 'System reset',
+      // The current proto only exposes resetAll. Keeping this in a separate
+      // handler makes it straightforward to swap in a system-specific RPC later.
       call: () => requireClient().resetAll({}),
       isSuccessful: isResponseStatusSuccessful,
       onSuccess: () => setActiveFaults([]),
@@ -185,7 +196,9 @@ export function ControlPanelConsole() {
         >
           <FaultConsoleHeader
             faultCount={faultCount}
+            canResetFaults={canCall && faultCount > 0}
             isBusy={pendingAction !== null}
+            onResetFaults={resetFaults}
             onResetSystem={resetSystem}
           />
 

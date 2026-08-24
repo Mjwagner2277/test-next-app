@@ -1,16 +1,21 @@
 import RestartAltIcon from '@mui/icons-material/RestartAlt'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep'
 import { Box, Button, Chip, Stack, Typography } from '@mui/material'
 
 type FaultConsoleHeaderProps = {
   faultCount: number
+  canResetFaults: boolean
   isBusy: boolean
+  onResetFaults: () => void
   onResetSystem: () => void
 }
 
 export function FaultConsoleHeader({
   faultCount,
+  canResetFaults,
   isBusy,
+  onResetFaults,
   onResetSystem,
 }: FaultConsoleHeaderProps) {
   return (
@@ -63,10 +68,37 @@ export function FaultConsoleHeader({
         />
         <Button
           variant="outlined"
+          startIcon={<DeleteSweepIcon />}
+          onClick={onResetFaults}
+          // Fault reset is tied to the fault workflow. It should only be
+          // available when the app can call the service and there is something
+          // active to clear.
+          disabled={!canResetFaults}
+          sx={{
+            minHeight: 36,
+            borderColor: '#ff8d80',
+            color: '#ffb0a6',
+            bgcolor: '#421c18',
+            fontWeight: 800,
+            '&:hover': {
+              borderColor: '#ffb0a6',
+              bgcolor: '#55231f',
+            },
+            '&.Mui-disabled': {
+              borderColor: '#33404d',
+              color: '#aab6c2',
+              bgcolor: '#1d2530',
+            },
+          }}
+        >
+          Reset faults
+        </Button>
+        <Button
+          variant="outlined"
           startIcon={<RestartAltIcon />}
           onClick={onResetSystem}
-          // Reset stays available during local UI review and when there are no
-          // active faults. Only an in-flight RPC disables it to prevent double
+          // System reset is a general command and stays available during local
+          // UI review. Only an in-flight RPC disables it to prevent double
           // submitting the command.
           disabled={isBusy}
           sx={{
