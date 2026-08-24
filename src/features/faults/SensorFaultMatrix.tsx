@@ -138,20 +138,16 @@ export function SensorFaultMatrix({
                     // table. Keep its layout explicit so the fault options show
                     // as three selectable rows instead of collapsing inline.
                     MenuProps={{
-                      slotProps: {
-                        paper: {
-                          sx: {
-                            border: '1px solid #33404d',
-                            bgcolor: '#111820',
-                            color: '#eef4f8',
-                          },
+                      sx: {
+                        '& .MuiPaper-root': {
+                          border: '1px solid #33404d',
+                          bgcolor: '#111820',
+                          color: '#eef4f8',
                         },
-                        list: {
-                          sx: {
-                            display: 'flex',
-                            flexDirection: 'column',
-                            p: 0.5,
-                          },
+                        '& .MuiMenu-list': {
+                          display: 'flex',
+                          flexDirection: 'column',
+                          p: 0.5,
                         },
                       },
                     }}
