@@ -64,7 +64,7 @@ export function SensorFaultMatrix({
         size="small"
         aria-label="Sensor faults available for injection"
         sx={{
-          minWidth: 900,
+          minWidth: 760,
           '& th': {
             py: 1.25,
             color: '#aab6c2',

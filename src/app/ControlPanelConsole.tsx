@@ -187,7 +187,7 @@ export function ControlPanelConsole() {
               display: 'grid',
               gridTemplateColumns: {
                 xs: '1fr',
-                lg: 'minmax(0, 3fr) minmax(340px, 1fr)',
+                md: 'minmax(0, 3fr) minmax(320px, 1fr)',
               },
               gap: 2,
               p: 2,
