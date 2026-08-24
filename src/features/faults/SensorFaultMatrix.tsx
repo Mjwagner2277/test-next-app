@@ -153,17 +153,17 @@ export function SensorFaultMatrix({
                     }}
                     sx={selectSx}
                   >
-                    {variants.map((variant) => (
+                    {variants.map((faultVariant) => (
                       <MenuItem
-                        key={variant}
-                        value={variant}
+                        key={faultVariant}
+                        value={faultVariant}
                         sx={{
                           display: 'flex',
                           width: '100%',
                           justifyContent: 'flex-start',
                         }}
                       >
-                        {variant}
+                        {faultVariant}
                       </MenuItem>
                     ))}
                   </Select>
