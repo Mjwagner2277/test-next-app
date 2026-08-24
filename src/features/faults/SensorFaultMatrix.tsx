@@ -126,7 +126,7 @@ export function SensorFaultMatrix({
                         event.target.value as UiFaultVariant,
                       )
                     }
-                    disabled={!canCall || isInjected}
+                    disabled={isInjected}
                     aria-label={`${sensor.name} fault variant`}
                     sx={selectSx}
                   >
