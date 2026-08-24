@@ -134,10 +134,39 @@ export function SensorFaultMatrix({
                     }
                     disabled={isInjected}
                     aria-label={`${sensor.name} fault variant`}
+                    // The MUI Select menu is rendered in a portal outside this
+                    // table. Keep its layout explicit so the fault options show
+                    // as three selectable rows instead of collapsing inline.
+                    MenuProps={{
+                      slotProps: {
+                        paper: {
+                          sx: {
+                            border: '1px solid #33404d',
+                            bgcolor: '#111820',
+                            color: '#eef4f8',
+                          },
+                        },
+                        list: {
+                          sx: {
+                            display: 'flex',
+                            flexDirection: 'column',
+                            p: 0.5,
+                          },
+                        },
+                      },
+                    }}
                     sx={selectSx}
                   >
                     {variants.map((variant) => (
-                      <MenuItem key={variant} value={variant}>
+                      <MenuItem
+                        key={variant}
+                        value={variant}
+                        sx={{
+                          display: 'flex',
+                          width: '100%',
+                          justifyContent: 'flex-start',
+                        }}
+                      >
                         {variant}
                       </MenuItem>
                     ))}
