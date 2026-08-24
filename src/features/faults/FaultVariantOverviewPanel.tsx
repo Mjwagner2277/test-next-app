@@ -10,16 +10,18 @@ import {
   FAULT_CLASSES,
   getFaultVariantColor,
   getFaultVariantLabel,
+  getSelectedFaultVariant,
+  getSensorById,
   type ActiveFault,
   type FaultClass,
-  type FaultVariantId,
+  type SelectedFaultVariants,
   type SensorRow,
 } from './faultModel'
 import { panelSx, panelTitleSx } from './faultUiStyles'
 
 type FaultVariantOverviewPanelProps = {
   sensors: SensorRow[]
-  selectedVariants: Record<string, FaultVariantId>
+  selectedVariants: SelectedFaultVariants
   activeFaults: ActiveFault[]
 }
 
@@ -106,26 +108,30 @@ export function FaultVariantOverviewPanel({
           spacing={0.75}
           sx={{ flexWrap: 'wrap' }}
         >
-          {visibleReadySelections.map((sensor) => (
-            <Chip
-              key={sensor.id}
-              size="small"
-              label={`${sensor.name}: ${getFaultVariantLabel(
-                sensor,
-                selectedVariants[sensor.id],
-              )}`}
-              sx={{
-                maxWidth: '100%',
-                border: '1px solid #33404d',
-                bgcolor: '#141a21',
-                color: getFaultVariantColor(
+          {visibleReadySelections.map((sensor) => {
+            const selectedVariant = getSelectedFaultVariant(
+              sensor,
+              selectedVariants,
+            )
+
+            return (
+              <Chip
+                key={sensor.id}
+                size="small"
+                label={`${sensor.name}: ${getFaultVariantLabel(
                   sensor,
-                  selectedVariants[sensor.id],
-                ),
-                fontWeight: 800,
-              }}
-            />
-          ))}
+                  selectedVariant,
+                )}`}
+                sx={{
+                  maxWidth: '100%',
+                  border: '1px solid #33404d',
+                  bgcolor: '#141a21',
+                  color: getFaultVariantColor(sensor, selectedVariant),
+                  fontWeight: 800,
+                }}
+              />
+            )
+          })}
           {hiddenReadySelectionCount > 0 ? (
             <Chip
               size="small"
@@ -198,9 +204,10 @@ function buildFaultClassSummary(
     sensorCount: sensors.filter(
       (sensor) => sensor.faultClassId === faultClass.id,
     ).length,
-    activeCount: activeFaults.filter(
-      (fault) => fault.faultClassId === faultClass.id,
-    )
-      .length,
+    activeCount: activeFaults.filter((fault) => {
+      const sensor = getSensorById(sensors, fault.sensorId)
+
+      return sensor?.faultClassId === faultClass.id
+    }).length,
   }
 }

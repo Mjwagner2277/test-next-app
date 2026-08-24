@@ -18,12 +18,14 @@ import {
 import type {
   ActiveFault,
   FaultVariantId,
+  SelectedFaultVariants,
   SensorRow,
 } from './faultModel'
 import {
   getFaultClass,
   getFaultVariantLabel,
   getFaultVariantOptions,
+  getSelectedFaultVariant,
 } from './faultModel'
 import {
   injectedChipSx,
@@ -35,7 +37,7 @@ import {
 
 type SensorFaultMatrixProps = {
   sensors: SensorRow[]
-  selectedVariants: Record<string, FaultVariantId>
+  selectedVariants: SelectedFaultVariants
   activeFaultBySensorId: Map<string, ActiveFault>
   canCall: boolean
   onSelectVariant: (sensorId: string, variant: FaultVariantId) => void
@@ -101,6 +103,10 @@ export function SensorFaultMatrix({
             const isInjected = activeFault !== undefined
             const faultClass = getFaultClass(sensor)
             const variantOptions = getFaultVariantOptions(sensor)
+            const selectedVariant = getSelectedFaultVariant(
+              sensor,
+              selectedVariants,
+            )
 
             return (
               <TableRow
@@ -135,7 +141,7 @@ export function SensorFaultMatrix({
                     <Select
                       fullWidth
                       size="small"
-                      value={selectedVariants[sensor.id]}
+                      value={selectedVariant}
                       displayEmpty
                       renderValue={(selected) =>
                         typeof selected === 'string' && selected.length > 0
@@ -190,7 +196,10 @@ export function SensorFaultMatrix({
                     size="small"
                     label={
                       isInjected
-                        ? `${activeFault.variantLabel} injected`
+                        ? `${getFaultVariantLabel(
+                            sensor,
+                            activeFault.variant,
+                          )} injected`
                         : 'Not inserted'
                     }
                     sx={isInjected ? injectedChipSx : readyChipSx}

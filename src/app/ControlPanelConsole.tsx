@@ -13,7 +13,7 @@ import {
   INITIAL_ACTIVE_FAULTS,
   SENSOR_ROWS,
   defaultSelectedVariants,
-  getFaultClass,
+  getSelectedFaultVariant,
   getFaultVariantLabel,
   isResponseStatusSuccessful,
   isSignalsResponseSuccessful,
@@ -104,8 +104,7 @@ export function ControlPanelConsole() {
   }
 
   function injectFault(sensor: SensorRow) {
-    const variant = selectedVariants[sensor.id]
-    const faultClass = getFaultClass(sensor)
+    const variant = getSelectedFaultVariant(sensor, selectedVariants)
     const variantLabel = getFaultVariantLabel(sensor, variant)
 
     void runRpc({
@@ -119,11 +118,7 @@ export function ControlPanelConsole() {
         setActiveFaults((current) =>
           upsertActiveFault(current, {
             sensorId: sensor.id,
-            sensorName: sensor.name,
-            faultClassId: faultClass.id,
-            faultClassLabel: faultClass.label,
             variant,
-            variantLabel,
             insertedAt: 'just now',
             detail: 'Accepted by coordinator',
           }),
@@ -135,7 +130,7 @@ export function ControlPanelConsole() {
   function clearFault(sensor: SensorRow) {
     const activeVariant =
       activeFaultBySensorId.get(sensor.id)?.variant ??
-      selectedVariants[sensor.id]
+      getSelectedFaultVariant(sensor, selectedVariants)
 
     void runRpc({
       name: `Clear ${sensor.name}`,

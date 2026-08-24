@@ -59,6 +59,8 @@ type FaultClassForId<Id extends FaultClassId> = Extract<
 type FaultVariantIdForClass<Id extends FaultClassId> =
   FaultClassForId<Id>['variants'][number]['id']
 
+export type SelectedFaultVariants = Partial<Record<string, FaultVariantId>>
+
 type BaseSensorRow = {
   id: string
   name: string
@@ -76,11 +78,7 @@ export type SensorRow = {
 
 export type ActiveFault = {
   sensorId: string
-  sensorName: string
-  faultClassId: FaultClassId
-  faultClassLabel: string
   variant: FaultVariantId
-  variantLabel: string
   insertedAt: string
   detail: string
 }
@@ -136,7 +134,26 @@ export const INITIAL_ACTIVE_FAULTS: ActiveFault[] = []
 
 export const defaultSelectedVariants = Object.fromEntries(
   SENSOR_ROWS.map((sensor) => [sensor.id, sensor.defaultVariant]),
-) as Record<string, FaultVariantId>
+) as SelectedFaultVariants
+
+export function formatFaultLabel(value: string) {
+  return value
+    .split(/[-_]/)
+    .filter(Boolean)
+    .map((word) => `${word[0]?.toUpperCase() ?? ''}${word.slice(1)}`)
+    .join(' ')
+}
+
+export function getSensorById(sensors: SensorRow[], sensorId: string) {
+  return sensors.find((sensor) => sensor.id === sensorId)
+}
+
+export function getSelectedFaultVariant(
+  sensor: SensorRow,
+  selectedVariants: SelectedFaultVariants,
+) {
+  return selectedVariants[sensor.id] ?? sensor.defaultVariant
+}
 
 export function getFaultClass<Id extends FaultClassId>(sensor: {
   faultClassId: Id
@@ -169,7 +186,9 @@ export function getFaultVariantLabel(
   sensor: SensorRow,
   variant: FaultVariantId,
 ) {
-  return getFaultVariantOption(sensor, variant)?.label ?? variant
+  return (
+    getFaultVariantOption(sensor, variant)?.label ?? formatFaultLabel(variant)
+  )
 }
 
 export function getFaultVariantColor(
