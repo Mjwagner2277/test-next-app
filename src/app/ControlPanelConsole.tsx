@@ -87,8 +87,8 @@ export function ControlPanelConsole() {
       const response = await call()
       const commandSucceeded = isCommandSuccessful(response)
 
-      // The backend can include an errors list, but this screen ignores it for
-      // now. Only the top-level SUCCESS enum changes local fault state.
+      // Inject/clear can include error details and reset returns status
+      // directly. isCommandSuccessful normalizes those shapes to one boolean.
       if (commandSucceeded) {
         onSuccess?.()
       }

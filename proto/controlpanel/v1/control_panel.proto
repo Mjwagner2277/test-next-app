@@ -17,8 +17,9 @@ service FaultCoordinatorService {
   rpc ClearSensorFault(ClearSensorFaultRequest) returns (FaultCommandResponse);
 
   // Clears all injected faults and asks the coordinator to return the system to
-  // its baseline state.
-  rpc ResetSystem(ResetSystemRequest) returns (FaultCommandResponse);
+  // its baseline state. This method returns the status wrapper directly because
+  // some backends do not attach per-command error details to reset commands.
+  rpc ResetSystem(ResetSystemRequest) returns (ResponseStatus);
 }
 
 // The UI exposes these exact fault choices in a select control. Keeping them as
