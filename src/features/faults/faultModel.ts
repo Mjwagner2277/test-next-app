@@ -52,16 +52,27 @@ export type FaultClass = (typeof FAULT_CLASSES)[number]
 export type FaultClassId = FaultClass['id']
 export type FaultVariantOption = FaultClass['variants'][number]
 export type FaultVariantId = FaultVariantOption['id']
+type FaultClassForId<Id extends FaultClassId> = Extract<
+  FaultClass,
+  { id: Id }
+>
+type FaultVariantIdForClass<Id extends FaultClassId> =
+  FaultClassForId<Id>['variants'][number]['id']
 
-export type SensorRow = {
+type BaseSensorRow = {
   id: string
   name: string
   location: string
   liveReading: string
-  faultClassId: FaultClassId
-  defaultVariant: FaultVariantId
-  signalMapping: SignalMapping
 }
+
+export type SensorRow = {
+  [Id in FaultClassId]: BaseSensorRow & {
+    faultClassId: Id
+    defaultVariant: FaultVariantIdForClass<Id>
+    signalMapping: SignalMapping<FaultVariantIdForClass<Id>>
+  }
+}[FaultClassId]
 
 export type ActiveFault = {
   sensorId: string
@@ -127,10 +138,12 @@ export const defaultSelectedVariants = Object.fromEntries(
   SENSOR_ROWS.map((sensor) => [sensor.id, sensor.defaultVariant]),
 ) as Record<string, FaultVariantId>
 
-export function getFaultClass(sensor: SensorRow) {
+export function getFaultClass<Id extends FaultClassId>(sensor: {
+  faultClassId: Id
+}) {
   const faultClass = FAULT_CLASSES.find(
     (candidate) => candidate.id === sensor.faultClassId,
-  )
+  ) as FaultClassForId<Id> | undefined
 
   if (!faultClass) {
     throw new Error(`Unknown fault class "${sensor.faultClassId}"`)
@@ -170,7 +183,10 @@ export function toSignal(sensor: SensorRow, variant: FaultVariantId) {
   // This is the abstraction layer between the operator table and the proto. The
   // UI never needs to expose card model enum values or signal ids; rows own that
   // mapping here.
-  const signalValue = sensor.signalMapping.values[variant]
+  const signalValues = sensor.signalMapping.values as Partial<
+    Record<FaultVariantId, SignalValue>
+  >
+  const signalValue = signalValues[variant]
 
   if (!signalValue) {
     throw new Error(`${sensor.name} does not define variant "${variant}"`)
@@ -204,10 +220,10 @@ export function isResponseStatusSuccessful(responseStatus?: ResponseStatus) {
   return responseStatus?.status === Status.SUCCESS
 }
 
-type SignalMapping = {
+type SignalMapping<VariantId extends FaultVariantId = FaultVariantId> = {
   signalId: bigint
   cardModel: CardModel
-  values: Partial<Record<FaultVariantId, SignalValue>>
+  values: Record<VariantId, SignalValue>
 }
 
 type SignalValue =
