@@ -64,7 +64,7 @@ export function SensorFaultMatrix({
         size="small"
         aria-label="Sensor faults available for injection"
         sx={{
-          minWidth: 760,
+          minWidth: { xs: 640, md: 760 },
           '& th': {
             py: 1.25,
             color: '#aab6c2',
@@ -115,7 +115,7 @@ export function SensorFaultMatrix({
                   </Stack>
                 </TableCell>
                 <TableCell>{sensor.liveReading}</TableCell>
-                <TableCell sx={{ width: { xs: 260, lg: 360 } }}>
+                <TableCell sx={{ width: { xs: 210, md: 260, lg: 360 } }}>
                   <Select
                     fullWidth
                     size="small"
@@ -168,7 +168,7 @@ export function SensorFaultMatrix({
                     ))}
                   </Select>
                 </TableCell>
-                <TableCell align="center" sx={{ width: 160 }}>
+                <TableCell align="center" sx={{ width: { xs: 135, md: 160 } }}>
                   <Chip
                     size="small"
                     label={

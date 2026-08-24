@@ -187,10 +187,14 @@ export function ControlPanelConsole() {
               display: 'grid',
               gridTemplateColumns: {
                 xs: '1fr',
-                md: 'minmax(0, 3fr) minmax(320px, 1fr)',
+                // Keep the fault state panel beside the matrix on normal
+                // laptop/tablet widths. Only phones stack the aside below.
+                sm: 'minmax(0, 1fr) minmax(240px, 280px)',
+                lg: 'minmax(0, 3fr) minmax(320px, 1fr)',
               },
-              gap: 2,
-              p: 2,
+              alignItems: 'start',
+              gap: { xs: 1.25, sm: 1.5, lg: 2 },
+              p: { xs: 1, sm: 1.5, lg: 2 },
             }}
           >
             <SensorFaultMatrix
