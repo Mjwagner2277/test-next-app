@@ -1,5 +1,5 @@
 import { Stack } from '@mui/material'
-import type { ActiveFault, SensorRow, UiFaultVariant } from './faultModel'
+import type { ActiveFault, FaultVariantId, SensorRow } from './faultModel'
 import { ActiveFaultPanel } from './ActiveFaultPanel'
 import { FaultLegendPanel } from './FaultLegendPanel'
 import { FaultVariantOverviewPanel } from './FaultVariantOverviewPanel'
@@ -7,14 +7,12 @@ import { FaultVariantOverviewPanel } from './FaultVariantOverviewPanel'
 type FaultStateAsideProps = {
   activeFaults: ActiveFault[]
   sensors: SensorRow[]
-  variants: UiFaultVariant[]
-  selectedVariants: Record<string, UiFaultVariant>
+  selectedVariants: Record<string, FaultVariantId>
 }
 
 export function FaultStateAside({
   activeFaults,
   sensors,
-  variants,
   selectedVariants,
 }: FaultStateAsideProps) {
   return (
@@ -23,7 +21,6 @@ export function FaultStateAside({
       <FaultLegendPanel />
       <FaultVariantOverviewPanel
         sensors={sensors}
-        variants={variants}
         selectedVariants={selectedVariants}
         activeFaults={activeFaults}
       />

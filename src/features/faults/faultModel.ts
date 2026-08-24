@@ -5,21 +5,71 @@ import {
   type SignalsResponse,
 } from '@/gen/proto/controlpanel/v1/control_panel_pb'
 
+type FaultClassConfig = {
+  id: string
+  label: string
+  variants: readonly FaultVariantOptionConfig[]
+}
+
+type FaultVariantOptionConfig = {
+  id: string
+  label: string
+  color: string
+}
+
+// Fault classes are the operator-facing categories of fault behavior. Adding a
+// new class means adding one object here, then pointing any matching sensor rows
+// at its id through sensor.faultClassId. The id types below are derived from
+// this list, so TypeScript will catch typos in sensor rows.
+export const FAULT_CLASSES = [
+  {
+    id: 'threshold',
+    label: 'Threshold',
+    variants: [
+      { id: 'high', label: 'High', color: '#ffb0a6' },
+      { id: 'low', label: 'Low', color: '#8ae4ec' },
+    ],
+  },
+  {
+    id: 'engagement',
+    label: 'Engagement',
+    variants: [
+      { id: 'engaged', label: 'Engaged', color: '#71cf84' },
+      { id: 'disengaged', label: 'Disengaged', color: '#f0bf58' },
+    ],
+  },
+  {
+    id: 'position',
+    label: 'Position',
+    variants: [
+      { id: 'open', label: 'Open', color: '#f0bf58' },
+      { id: 'shut', label: 'Shut', color: '#71cf84' },
+    ],
+  },
+] as const satisfies readonly FaultClassConfig[]
+
+export type FaultClass = (typeof FAULT_CLASSES)[number]
+export type FaultClassId = FaultClass['id']
+export type FaultVariantOption = FaultClass['variants'][number]
+export type FaultVariantId = FaultVariantOption['id']
+
 export type SensorRow = {
   id: string
   name: string
   location: string
   liveReading: string
-  defaultVariant: UiFaultVariant
+  faultClassId: FaultClassId
+  defaultVariant: FaultVariantId
   signalMapping: SignalMapping
 }
-
-export type UiFaultVariant = 'High' | 'Low' | 'Unknown'
 
 export type ActiveFault = {
   sensorId: string
   sensorName: string
-  variant: UiFaultVariant
+  faultClassId: FaultClassId
+  faultClassLabel: string
+  variant: FaultVariantId
+  variantLabel: string
   insertedAt: string
   detail: string
 }
@@ -37,14 +87,16 @@ export const SENSOR_ROWS: SensorRow[] = [
     name: 'Temperature A',
     location: 'Zone 1 inlet',
     liveReading: '72.4 F',
-    defaultVariant: 'High',
+    // The threshold class gives this row a High/Low dropdown. Each id used by
+    // that class should have a matching proto payload in signalMapping.values.
+    faultClassId: 'threshold',
+    defaultVariant: 'high',
     signalMapping: {
       signalId: 1001n,
       cardModel: CardModel.TYPE1,
       values: {
-        High: { case: 'analog', value: 4095 },
-        Low: { case: 'analog', value: 0 },
-        Unknown: { case: 'serial', value: 'UNKNOWN' },
+        high: { case: 'analog', value: 4095 },
+        low: { case: 'analog', value: 0 },
       },
     },
   },
@@ -53,36 +105,81 @@ export const SENSOR_ROWS: SensorRow[] = [
     name: 'Interlock B',
     location: 'Access panel',
     liveReading: 'Closed',
-    defaultVariant: 'Low',
+    // The position class gives this row an Open/Shut dropdown. The UI stays
+    // readable while the signal id, card model, and proto value stay hidden here.
+    faultClassId: 'position',
+    defaultVariant: 'open',
     signalMapping: {
       signalId: 2001n,
       cardModel: CardModel.TYPE2,
       values: {
-        High: { case: 'discrete', value: true },
-        Low: { case: 'discrete', value: false },
-        Unknown: { case: 'serial', value: 'UNKNOWN' },
+        open: { case: 'discrete', value: false },
+        shut: { case: 'discrete', value: true },
       },
     },
   },
 ]
-
-export const FAULT_VARIANTS: UiFaultVariant[] = ['High', 'Low', 'Unknown']
 
 // Start clear so both sample rows are immediately usable during review.
 export const INITIAL_ACTIVE_FAULTS: ActiveFault[] = []
 
 export const defaultSelectedVariants = Object.fromEntries(
   SENSOR_ROWS.map((sensor) => [sensor.id, sensor.defaultVariant]),
-) as Record<string, UiFaultVariant>
+) as Record<string, FaultVariantId>
 
-export function toSignal(sensor: SensorRow, variant: UiFaultVariant) {
+export function getFaultClass(sensor: SensorRow) {
+  const faultClass = FAULT_CLASSES.find(
+    (candidate) => candidate.id === sensor.faultClassId,
+  )
+
+  if (!faultClass) {
+    throw new Error(`Unknown fault class "${sensor.faultClassId}"`)
+  }
+
+  return faultClass
+}
+
+export function getFaultVariantOptions(sensor: SensorRow) {
+  return getFaultClass(sensor).variants
+}
+
+export function getFaultVariantOption(
+  sensor: SensorRow,
+  variant: FaultVariantId,
+) {
+  return getFaultVariantOptions(sensor).find(
+    (option) => option.id === variant,
+  )
+}
+
+export function getFaultVariantLabel(
+  sensor: SensorRow,
+  variant: FaultVariantId,
+) {
+  return getFaultVariantOption(sensor, variant)?.label ?? variant
+}
+
+export function getFaultVariantColor(
+  sensor: SensorRow,
+  variant: FaultVariantId,
+) {
+  return getFaultVariantOption(sensor, variant)?.color ?? '#c5d0da'
+}
+
+export function toSignal(sensor: SensorRow, variant: FaultVariantId) {
   // This is the abstraction layer between the operator table and the proto. The
   // UI never needs to expose card model enum values or signal ids; rows own that
   // mapping here.
+  const signalValue = sensor.signalMapping.values[variant]
+
+  if (!signalValue) {
+    throw new Error(`${sensor.name} does not define variant "${variant}"`)
+  }
+
   return {
     signalId: sensor.signalMapping.signalId,
     cardModel: sensor.signalMapping.cardModel,
-    signalValue: sensor.signalMapping.values[variant],
+    signalValue,
   }
 }
 
@@ -110,7 +207,7 @@ export function isResponseStatusSuccessful(responseStatus?: ResponseStatus) {
 type SignalMapping = {
   signalId: bigint
   cardModel: CardModel
-  values: Record<UiFaultVariant, SignalValue>
+  values: Partial<Record<FaultVariantId, SignalValue>>
 }
 
 type SignalValue =

@@ -6,25 +6,31 @@ import {
   Stack,
   Typography,
 } from '@mui/material'
-import type { ActiveFault, SensorRow, UiFaultVariant } from './faultModel'
+import {
+  FAULT_CLASSES,
+  getFaultVariantColor,
+  getFaultVariantLabel,
+  type ActiveFault,
+  type FaultClass,
+  type FaultVariantId,
+  type SensorRow,
+} from './faultModel'
 import { panelSx, panelTitleSx } from './faultUiStyles'
 
 type FaultVariantOverviewPanelProps = {
   sensors: SensorRow[]
-  variants: UiFaultVariant[]
-  selectedVariants: Record<string, UiFaultVariant>
+  selectedVariants: Record<string, FaultVariantId>
   activeFaults: ActiveFault[]
 }
 
-type VariantSummary = {
-  variant: UiFaultVariant
-  selectedCount: number
+type FaultClassSummary = {
+  faultClass: FaultClass
+  sensorCount: number
   activeCount: number
 }
 
 export function FaultVariantOverviewPanel({
   sensors,
-  variants,
   selectedVariants,
   activeFaults,
 }: FaultVariantOverviewPanelProps) {
@@ -35,18 +41,23 @@ export function FaultVariantOverviewPanel({
   const visibleReadySelections = readySelections.slice(0, 3)
   const hiddenReadySelectionCount =
     readySelections.length - visibleReadySelections.length
-  const summaries = variants.map((variant) =>
-    buildVariantSummary(variant, sensors, selectedVariants, activeFaults),
+  const configuredFaultClassIds = new Set(
+    sensors.map((sensor) => sensor.faultClassId),
+  )
+  const summaries = FAULT_CLASSES.filter((faultClass) =>
+    configuredFaultClassIds.has(faultClass.id),
+  ).map((faultClass) =>
+    buildFaultClassSummary(faultClass, sensors, activeFaults),
   )
 
   return (
     <Paper variant="outlined" sx={panelSx}>
-      <Typography sx={panelTitleSx}>Variant overview</Typography>
+      <Typography sx={panelTitleSx}>Fault classes</Typography>
 
       <Stack spacing={1.25} sx={{ mt: 1.25 }}>
         {summaries.map((summary) => (
-          <VariantRow
-            key={summary.variant}
+          <FaultClassRow
+            key={summary.faultClass.id}
             summary={summary}
             totalSensors={sensors.length}
           />
@@ -99,12 +110,18 @@ export function FaultVariantOverviewPanel({
             <Chip
               key={sensor.id}
               size="small"
-              label={`${sensor.name}: ${selectedVariants[sensor.id]}`}
+              label={`${sensor.name}: ${getFaultVariantLabel(
+                sensor,
+                selectedVariants[sensor.id],
+              )}`}
               sx={{
                 maxWidth: '100%',
                 border: '1px solid #33404d',
                 bgcolor: '#141a21',
-                color: variantColor(selectedVariants[sensor.id]),
+                color: getFaultVariantColor(
+                  sensor,
+                  selectedVariants[sensor.id],
+                ),
                 fontWeight: 800,
               }}
             />
@@ -127,15 +144,16 @@ export function FaultVariantOverviewPanel({
   )
 }
 
-function VariantRow({
+function FaultClassRow({
   summary,
   totalSensors,
 }: {
-  summary: VariantSummary
+  summary: FaultClassSummary
   totalSensors: number
 }) {
-  const selectedPercent =
-    totalSensors === 0 ? 0 : (summary.selectedCount / totalSensors) * 100
+  const configuredPercent =
+    totalSensors === 0 ? 0 : (summary.sensorCount / totalSensors) * 100
+  const classColor = summary.faultClass.variants[0]?.color ?? '#c5d0da'
 
   return (
     <Box>
@@ -145,24 +163,24 @@ function VariantRow({
         sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}
       >
         <Typography
-          sx={{ color: variantColor(summary.variant), fontWeight: 800 }}
+          sx={{ color: classColor, fontWeight: 800 }}
         >
-          {summary.variant}
+          {summary.faultClass.label}
         </Typography>
         <Typography sx={{ color: '#c5d0da' }}>
-          {summary.selectedCount} selected / {summary.activeCount} active
+          {summary.sensorCount} configured / {summary.activeCount} active
         </Typography>
       </Stack>
       <LinearProgress
         variant="determinate"
-        value={selectedPercent}
+        value={configuredPercent}
         sx={{
           height: 8,
           borderRadius: 999,
           bgcolor: '#111820',
           '& .MuiLinearProgress-bar': {
             borderRadius: 999,
-            bgcolor: variantColor(summary.variant),
+            bgcolor: classColor,
           },
         }}
       />
@@ -170,29 +188,19 @@ function VariantRow({
   )
 }
 
-function buildVariantSummary(
-  variant: UiFaultVariant,
+function buildFaultClassSummary(
+  faultClass: FaultClass,
   sensors: SensorRow[],
-  selectedVariants: Record<string, UiFaultVariant>,
   activeFaults: ActiveFault[],
-): VariantSummary {
+): FaultClassSummary {
   return {
-    variant,
-    selectedCount: sensors.filter(
-      (sensor) => selectedVariants[sensor.id] === variant,
+    faultClass,
+    sensorCount: sensors.filter(
+      (sensor) => sensor.faultClassId === faultClass.id,
     ).length,
-    activeCount: activeFaults.filter((fault) => fault.variant === variant)
+    activeCount: activeFaults.filter(
+      (fault) => fault.faultClassId === faultClass.id,
+    )
       .length,
-  }
-}
-
-function variantColor(variant: UiFaultVariant) {
-  switch (variant) {
-    case 'High':
-      return '#ffb0a6'
-    case 'Low':
-      return '#8ae4ec'
-    case 'Unknown':
-      return '#f0bf58'
   }
 }

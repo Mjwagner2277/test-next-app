@@ -19,10 +19,11 @@ export function ActiveFaultPanel({ activeFaults }: ActiveFaultPanelProps) {
           {activeFaults.map((fault) => (
             <Box key={fault.sensorId} sx={activeFaultItemSx}>
               <Typography sx={{ fontWeight: 800 }}>
-                {fault.sensorName} -&gt; {fault.variant}
+                {fault.sensorName} -&gt; {fault.variantLabel}
               </Typography>
               <Typography sx={{ color: '#c5d0da' }}>
-                {fault.detail}, elapsed {fault.insertedAt}
+                {fault.faultClassLabel} fault, {fault.detail}, elapsed{' '}
+                {fault.insertedAt}
               </Typography>
             </Box>
           ))}

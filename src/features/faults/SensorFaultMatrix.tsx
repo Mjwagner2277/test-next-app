@@ -17,8 +17,13 @@ import {
 } from '@mui/material'
 import type {
   ActiveFault,
+  FaultVariantId,
   SensorRow,
-  UiFaultVariant,
+} from './faultModel'
+import {
+  getFaultClass,
+  getFaultVariantLabel,
+  getFaultVariantOptions,
 } from './faultModel'
 import {
   injectedChipSx,
@@ -30,18 +35,16 @@ import {
 
 type SensorFaultMatrixProps = {
   sensors: SensorRow[]
-  variants: UiFaultVariant[]
-  selectedVariants: Record<string, UiFaultVariant>
+  selectedVariants: Record<string, FaultVariantId>
   activeFaultBySensorId: Map<string, ActiveFault>
   canCall: boolean
-  onSelectVariant: (sensorId: string, variant: UiFaultVariant) => void
+  onSelectVariant: (sensorId: string, variant: FaultVariantId) => void
   onInjectFault: (sensor: SensorRow) => void
   onClearFault: (sensor: SensorRow) => void
 }
 
 export function SensorFaultMatrix({
   sensors,
-  variants,
   selectedVariants,
   activeFaultBySensorId,
   canCall,
@@ -96,6 +99,8 @@ export function SensorFaultMatrix({
           {sensors.map((sensor) => {
             const activeFault = activeFaultBySensorId.get(sensor.id)
             const isInjected = activeFault !== undefined
+            const faultClass = getFaultClass(sensor)
+            const variantOptions = getFaultVariantOptions(sensor)
 
             return (
               <TableRow
@@ -116,64 +121,76 @@ export function SensorFaultMatrix({
                 </TableCell>
                 <TableCell>{sensor.liveReading}</TableCell>
                 <TableCell sx={{ width: { xs: 210, md: 260, lg: 360 } }}>
-                  <Select
-                    fullWidth
-                    size="small"
-                    value={selectedVariants[sensor.id]}
-                    displayEmpty
-                    renderValue={(selected) =>
-                      typeof selected === 'string' && selected.length > 0
-                        ? selected
-                        : 'Select fault'
-                    }
-                    onChange={(event) =>
-                      onSelectVariant(
-                        sensor.id,
-                        event.target.value as UiFaultVariant,
-                      )
-                    }
-                    disabled={isInjected}
-                    aria-label={`${sensor.name} fault variant`}
-                    // The MUI Select menu is rendered in a portal outside this
-                    // table. Keep its layout explicit so the fault options show
-                    // as three selectable rows instead of collapsing inline.
-                    MenuProps={{
-                      sx: {
-                        '& .MuiPaper-root': {
-                          border: '1px solid #33404d',
-                          bgcolor: '#111820',
-                          color: '#eef4f8',
+                  <Stack spacing={0.75}>
+                    <Typography
+                      sx={{
+                        color: '#aab6c2',
+                        fontSize: 12,
+                        fontWeight: 800,
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {faultClass.label}
+                    </Typography>
+                    <Select
+                      fullWidth
+                      size="small"
+                      value={selectedVariants[sensor.id]}
+                      displayEmpty
+                      renderValue={(selected) =>
+                        typeof selected === 'string' && selected.length > 0
+                          ? getFaultVariantLabel(sensor, selected)
+                          : 'Select fault'
+                      }
+                      onChange={(event) =>
+                        onSelectVariant(
+                          sensor.id,
+                          event.target.value as FaultVariantId,
+                        )
+                      }
+                      disabled={isInjected}
+                      aria-label={`${sensor.name} fault variant`}
+                      // The MUI Select menu is rendered in a portal outside this
+                      // table. Keep its layout explicit so the fault options show
+                      // as separate selectable rows.
+                      MenuProps={{
+                        sx: {
+                          '& .MuiPaper-root': {
+                            border: '1px solid #33404d',
+                            bgcolor: '#111820',
+                            color: '#eef4f8',
+                          },
+                          '& .MuiMenu-list': {
+                            display: 'flex',
+                            flexDirection: 'column',
+                            p: 0.5,
+                          },
                         },
-                        '& .MuiMenu-list': {
-                          display: 'flex',
-                          flexDirection: 'column',
-                          p: 0.5,
-                        },
-                      },
-                    }}
-                    sx={selectSx}
-                  >
-                    {variants.map((faultVariant) => (
-                      <MenuItem
-                        key={faultVariant}
-                        value={faultVariant}
-                        sx={{
-                          display: 'flex',
-                          width: '100%',
-                          justifyContent: 'flex-start',
-                        }}
-                      >
-                        {faultVariant}
-                      </MenuItem>
-                    ))}
-                  </Select>
+                      }}
+                      sx={selectSx}
+                    >
+                      {variantOptions.map((faultVariant) => (
+                        <MenuItem
+                          key={faultVariant.id}
+                          value={faultVariant.id}
+                          sx={{
+                            display: 'flex',
+                            width: '100%',
+                            justifyContent: 'flex-start',
+                          }}
+                        >
+                          {faultVariant.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </Stack>
                 </TableCell>
                 <TableCell align="center" sx={{ width: { xs: 135, md: 160 } }}>
                   <Chip
                     size="small"
                     label={
                       isInjected
-                        ? `${activeFault.variant} injected`
+                        ? `${activeFault.variantLabel} injected`
                         : 'Not inserted'
                     }
                     sx={isInjected ? injectedChipSx : readyChipSx}

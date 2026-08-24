@@ -10,17 +10,18 @@ import { FaultConsoleHeader } from '@/features/faults/FaultConsoleHeader'
 import { FaultStateAside } from '@/features/faults/FaultStateAside'
 import { SensorFaultMatrix } from '@/features/faults/SensorFaultMatrix'
 import {
-  FAULT_VARIANTS,
   INITIAL_ACTIVE_FAULTS,
   SENSOR_ROWS,
   defaultSelectedVariants,
+  getFaultClass,
+  getFaultVariantLabel,
   isResponseStatusSuccessful,
   isSignalsResponseSuccessful,
   toSignal,
   upsertActiveFault,
+  type FaultVariantId,
   type RpcRunOptions,
   type SensorRow,
-  type UiFaultVariant,
 } from '@/features/faults/faultModel'
 import {
   createSignalStimClient,
@@ -29,8 +30,9 @@ import {
 import { useGrpcWebConfig } from '@/rpc/useGrpcWebConfig'
 
 export function ControlPanelConsole() {
-  // Each row owns a selected fault variant. This mirrors the requested "fault
-  // column" behavior: choose High, Low, or Unknown, then inject that row.
+  // Each row owns a selected fault variant. The valid values now come from the
+  // row's fault class, so one row can offer High/Low while another offers
+  // Open/Shut or Engaged/Disengaged.
   const [selectedVariants, setSelectedVariants] = useState(
     defaultSelectedVariants,
   )
@@ -62,7 +64,7 @@ export function ControlPanelConsole() {
   const canCall =
     pendingAction === null && client !== null && configError === null
 
-  function selectVariant(sensorId: string, variant: UiFaultVariant) {
+  function selectVariant(sensorId: string, variant: FaultVariantId) {
     setSelectedVariants((current) => ({
       ...current,
       [sensorId]: variant,
@@ -103,9 +105,11 @@ export function ControlPanelConsole() {
 
   function injectFault(sensor: SensorRow) {
     const variant = selectedVariants[sensor.id]
+    const faultClass = getFaultClass(sensor)
+    const variantLabel = getFaultVariantLabel(sensor, variant)
 
     void runRpc({
-      name: `Inject ${sensor.name} ${variant}`,
+      name: `Inject ${sensor.name} ${variantLabel}`,
       call: () =>
         requireClient().setSignal({
           signals: [toSignal(sensor, variant)],
@@ -116,7 +120,10 @@ export function ControlPanelConsole() {
           upsertActiveFault(current, {
             sensorId: sensor.id,
             sensorName: sensor.name,
+            faultClassId: faultClass.id,
+            faultClassLabel: faultClass.label,
             variant,
+            variantLabel,
             insertedAt: 'just now',
             detail: 'Accepted by coordinator',
           }),
@@ -199,7 +206,6 @@ export function ControlPanelConsole() {
           >
             <SensorFaultMatrix
               sensors={SENSOR_ROWS}
-              variants={FAULT_VARIANTS}
               selectedVariants={selectedVariants}
               activeFaultBySensorId={activeFaultBySensorId}
               canCall={canCall}
@@ -211,7 +217,6 @@ export function ControlPanelConsole() {
             <FaultStateAside
               activeFaults={activeFaults}
               sensors={SENSOR_ROWS}
-              variants={FAULT_VARIANTS}
               selectedVariants={selectedVariants}
             />
           </Box>
