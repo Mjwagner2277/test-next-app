@@ -2,7 +2,15 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep'
 import { Box, Button, Chip, Stack, Typography } from '@mui/material'
-import { disabledControlSx } from './faultUiStyles'
+import {
+  faultConsoleActionsSx,
+  faultConsoleEyebrowSx,
+  faultConsoleHeaderSx,
+  faultConsoleTitleSx,
+  faultCountChipSx,
+  resetFaultButtonSx,
+  systemResetButtonSx,
+} from './faultUiStyles'
 
 type FaultConsoleHeaderProps = {
   faultCount: number
@@ -22,29 +30,13 @@ export function FaultConsoleHeader({
   return (
     <Box
       component="header"
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) auto' },
-        gap: 1.5,
-        alignItems: 'center',
-        p: 2,
-        borderBottom: '1px solid #33404d',
-        bgcolor: '#111820',
-      }}
+      sx={faultConsoleHeaderSx}
     >
       <Box>
-        <Typography
-          sx={{
-            color: '#aab6c2',
-            fontSize: 12,
-            fontWeight: 800,
-            letterSpacing: 1,
-            textTransform: 'uppercase',
-          }}
-        >
+        <Typography sx={faultConsoleEyebrowSx}>
           Sensor failure injection
         </Typography>
-        <Typography component="h1" variant="h2" sx={{ color: '#f7fafc' }}>
+        <Typography component="h1" variant="h2" sx={faultConsoleTitleSx}>
           Sensor Fault Matrix
         </Typography>
       </Box>
@@ -52,20 +44,12 @@ export function FaultConsoleHeader({
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={1.25}
-        sx={{ alignItems: { xs: 'stretch', sm: 'center' } }}
+        sx={faultConsoleActionsSx}
       >
         <Chip
           icon={<WarningAmberIcon />}
           label={`${faultCount} fault${faultCount === 1 ? '' : 's'} in system`}
-          sx={{
-            minHeight: 36,
-            border: '1px solid',
-            borderColor: faultCount > 0 ? '#ff8d80' : '#71cf84',
-            bgcolor: faultCount > 0 ? '#421c18' : '#163b1f',
-            color: faultCount > 0 ? '#ffb0a6' : '#b6f1bf',
-            fontWeight: 800,
-            '& .MuiChip-icon': { color: 'inherit' },
-          }}
+          sx={faultCountChipSx(faultCount)}
         />
         <Button
           variant="outlined"
@@ -75,23 +59,7 @@ export function FaultConsoleHeader({
           // available when the app can call the service and there is something
           // active to clear.
           disabled={!canResetFaults}
-          sx={{
-            minHeight: 36,
-            borderColor: '#ff8d80',
-            color: '#ffb0a6',
-            bgcolor: '#421c18',
-            fontWeight: 800,
-            '&:hover': {
-              borderColor: '#ffb0a6',
-              bgcolor: '#55231f',
-            },
-            '&.Mui-disabled': {
-              ...disabledControlSx,
-            },
-            '&.Mui-disabled .MuiSvgIcon-root': {
-              color: '#aab6c2',
-            },
-          }}
+          sx={resetFaultButtonSx}
         >
           Reset faults
         </Button>
@@ -103,23 +71,7 @@ export function FaultConsoleHeader({
           // UI review. Only an in-flight RPC disables it to prevent double
           // submitting the command.
           disabled={isBusy}
-          sx={{
-            minHeight: 36,
-            borderColor: '#4cc9d4',
-            color: '#8ae4ec',
-            bgcolor: '#10383d',
-            fontWeight: 800,
-            '&:hover': {
-              borderColor: '#8ae4ec',
-              bgcolor: '#164a51',
-            },
-            '&.Mui-disabled': {
-              ...disabledControlSx,
-            },
-            '&.Mui-disabled .MuiSvgIcon-root': {
-              color: '#aab6c2',
-            },
-          }}
+          sx={systemResetButtonSx}
         >
           System reset
         </Button>

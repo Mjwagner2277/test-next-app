@@ -25,6 +25,53 @@ export const disabledControlSx = {
   bgcolor: '#26313a',
 }
 
+const disabledButtonStateSx = {
+  '&.Mui-disabled': {
+    ...disabledControlSx,
+  },
+  '&.Mui-disabled .MuiSvgIcon-root': {
+    color: '#aab6c2',
+  },
+}
+
+export const faultConsoleHeaderSx = {
+  display: 'grid',
+  gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) auto' },
+  gap: 1.5,
+  alignItems: 'center',
+  p: 2,
+  borderBottom: '1px solid #33404d',
+  bgcolor: '#111820',
+}
+
+export const faultConsoleEyebrowSx = {
+  color: '#aab6c2',
+  fontSize: 12,
+  fontWeight: 800,
+  letterSpacing: 1,
+  textTransform: 'uppercase',
+}
+
+export const faultConsoleTitleSx = {
+  color: '#f7fafc',
+}
+
+export const faultConsoleActionsSx = {
+  alignItems: { xs: 'stretch', sm: 'center' },
+}
+
+export function faultCountChipSx(faultCount: number) {
+  return {
+    minHeight: 36,
+    border: '1px solid',
+    borderColor: faultCount > 0 ? '#ff8d80' : '#71cf84',
+    bgcolor: faultCount > 0 ? '#421c18' : '#163b1f',
+    color: faultCount > 0 ? '#ffb0a6' : '#b6f1bf',
+    fontWeight: 800,
+    '& .MuiChip-icon': { color: 'inherit' },
+  }
+}
+
 export const activeFaultItemSx = {
   p: 1.25,
   border: '1px solid #33404d',
@@ -40,12 +87,7 @@ export const commandButtonSx = {
     borderColor: '#8ae4ec',
     bgcolor: '#10383d',
   },
-  '&.Mui-disabled': {
-    ...disabledControlSx,
-  },
-  '&.Mui-disabled .MuiSvgIcon-root': {
-    color: '#aab6c2',
-  },
+  ...disabledButtonStateSx,
 }
 
 export const injectButtonSx = {
@@ -62,12 +104,23 @@ export const removeButtonSx = {
     borderColor: '#ffb0a6',
     bgcolor: '#421c18',
   },
-  '&.Mui-disabled': {
-    ...disabledControlSx,
+  ...disabledButtonStateSx,
+}
+
+export const resetFaultButtonSx = {
+  ...removeButtonSx,
+  fontWeight: 800,
+}
+
+export const systemResetButtonSx = {
+  ...commandButtonSx,
+  bgcolor: '#10383d',
+  fontWeight: 800,
+  '&:hover': {
+    borderColor: '#8ae4ec',
+    bgcolor: '#164a51',
   },
-  '&.Mui-disabled .MuiSvgIcon-root': {
-    color: '#aab6c2',
-  },
+  ...disabledButtonStateSx,
 }
 
 export const selectSx = {
