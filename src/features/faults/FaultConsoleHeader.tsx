@@ -2,6 +2,7 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep'
 import { Box, Button, Chip, Stack, Typography } from '@mui/material'
+import { disabledControlSx } from './faultUiStyles'
 
 type FaultConsoleHeaderProps = {
   faultCount: number
@@ -85,9 +86,10 @@ export function FaultConsoleHeader({
               bgcolor: '#55231f',
             },
             '&.Mui-disabled': {
-              borderColor: '#33404d',
+              ...disabledControlSx,
+            },
+            '&.Mui-disabled .MuiSvgIcon-root': {
               color: '#aab6c2',
-              bgcolor: '#1d2530',
             },
           }}
         >
@@ -112,9 +114,10 @@ export function FaultConsoleHeader({
               bgcolor: '#164a51',
             },
             '&.Mui-disabled': {
-              borderColor: '#33404d',
+              ...disabledControlSx,
+            },
+            '&.Mui-disabled .MuiSvgIcon-root': {
               color: '#aab6c2',
-              bgcolor: '#1d2530',
             },
           }}
         >

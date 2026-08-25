@@ -18,6 +18,13 @@ export const panelTitleSx = {
   color: '#f7fafc',
 }
 
+export const disabledControlSx = {
+  opacity: 1,
+  borderColor: '#667684',
+  color: '#c5d0da',
+  bgcolor: '#26313a',
+}
+
 export const activeFaultItemSx = {
   p: 1.25,
   border: '1px solid #33404d',
@@ -32,6 +39,12 @@ export const commandButtonSx = {
   '&:hover': {
     borderColor: '#8ae4ec',
     bgcolor: '#10383d',
+  },
+  '&.Mui-disabled': {
+    ...disabledControlSx,
+  },
+  '&.Mui-disabled .MuiSvgIcon-root': {
+    color: '#aab6c2',
   },
 }
 
@@ -49,6 +62,12 @@ export const removeButtonSx = {
     borderColor: '#ffb0a6',
     bgcolor: '#421c18',
   },
+  '&.Mui-disabled': {
+    ...disabledControlSx,
+  },
+  '&.Mui-disabled .MuiSvgIcon-root': {
+    color: '#aab6c2',
+  },
 }
 
 export const selectSx = {
@@ -62,6 +81,20 @@ export const selectSx = {
   },
   '& .MuiSvgIcon-root': {
     color: '#eef4f8',
+  },
+  '&.Mui-disabled': {
+    opacity: 1,
+    bgcolor: '#26313a',
+    color: '#c5d0da',
+  },
+  '& .MuiSelect-select.Mui-disabled': {
+    WebkitTextFillColor: '#c5d0da',
+  },
+  '&.Mui-disabled .MuiOutlinedInput-notchedOutline': {
+    borderColor: '#667684',
+  },
+  '&.Mui-disabled .MuiSvgIcon-root': {
+    color: '#aab6c2',
   },
 }
 
