@@ -22,3 +22,8 @@ checks and screenshot captures used to verify the generated HTML.
 ## Local Development
 
 See `local-development.md` for the quickest way to start the GUI on demand.
+
+## Container Hardening
+
+See `container-hardening.md` for the Red Hat UBI 9.6 hardened image path,
+build command, runtime security choices, and Kubernetes security-context notes.

@@ -216,6 +216,14 @@ docker build -f build/Dockerfile -t test-next-app:latest .
 
 The `.` at the end is important. It tells Docker to use the repo root as the build context, so `build/Dockerfile` can copy `package.json`, `src`, `proto`, and the other app files. `build/Dockerfile.dockerignore` keeps local-only folders such as `node_modules` and `.next` out of that context.
 
+For the cyber-hardened UBI 9.6 image path, use:
+
+```sh
+npm run image:build:ubi-hardened
+```
+
+That build uses `build/Dockerfile.ubi-hardened` and is documented in `docs/container-hardening.md`.
+
 ## Request Flow
 
 1. The user picks a fault variant in `src/app/ControlPanelConsole.tsx`.

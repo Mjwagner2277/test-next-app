@@ -1,0 +1,118 @@
+# syntax=docker/dockerfile:1.7
+
+# Hardened UBI build for production-style environments.
+#
+# This file is intentionally separate from build/Dockerfile. The default
+# Dockerfile stays small and convenient; this one favors a more explicit cyber
+# process: Red Hat UBI 9.6 base, reproducible dependency install, no source tree
+# in the final image, no npm in the final image, and a numeric non-root runtime.
+
+# Keep the base image configurable so a release pipeline can pin a digest:
+#   --build-arg UBI_MINIMAL_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal@sha256:...
+#
+# The default remains the readable RHEL 9.6-family UBI tag the team asked for.
+ARG UBI_MINIMAL_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal:9.6
+
+# Next.js 16 requires Node >=20.9. UBI 9's default nodejs package is older, so
+# the Dockerfile explicitly enables the Red Hat Node.js 22 module stream.
+ARG NODEJS_MODULE_STREAM=22
+
+FROM ${UBI_MINIMAL_IMAGE} AS build-base
+ARG NODEJS_MODULE_STREAM
+
+WORKDIR /app
+
+# Keep build logs quiet and deterministic. Audit/SBOM work should happen as a
+# deliberate pipeline step, not as an implicit npm network call during image
+# construction.
+ENV NEXT_TELEMETRY_DISABLED=1 \
+    NPM_CONFIG_AUDIT=false \
+    NPM_CONFIG_FUND=false \
+    NPM_CONFIG_UPDATE_NOTIFIER=false
+
+# Builder stage:
+# - enable the Node.js 22 module from Red Hat UBI repositories
+# - install npm only where it is needed
+# - suppress weak dependencies so docs/i18n extras do not drift into the build
+# - clean package-manager caches so intermediate layers stay tighter
+RUN microdnf module enable -y nodejs:${NODEJS_MODULE_STREAM} \
+    && microdnf install -y --setopt=install_weak_deps=0 nodejs npm \
+    && microdnf clean all \
+    && rm -rf /var/cache/yum /var/cache/dnf /tmp/*
+
+FROM build-base AS deps
+
+# package-lock.json is the dependency allow-list for this scaffold. npm ci
+# refuses to proceed if package.json and package-lock.json disagree, which is
+# exactly what we want in a controlled build.
+COPY package.json package-lock.json ./
+RUN npm ci
+
+FROM build-base AS builder
+
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy only the files needed to generate protos and build the Next.js app.
+# Avoiding `COPY . .` keeps docs, local tooling output, and accidental files out
+# of the trusted build input surface.
+COPY package.json package-lock.json ./
+COPY next-env.d.ts next.config.ts tsconfig.json ./
+COPY buf.yaml buf.gen.yaml ./
+COPY proto ./proto
+COPY public ./public
+COPY src ./src
+
+# Generate checked-in protobuf types from proto/, then produce Next's standalone
+# runtime tree. The standalone output is the only app runtime copied forward.
+RUN npm run proto:gen \
+    && npm run build
+
+FROM ${UBI_MINIMAL_IMAGE} AS runner
+ARG UBI_MINIMAL_IMAGE
+ARG NODEJS_MODULE_STREAM
+ARG BUILD_DATE=unknown
+ARG VCS_REF=unknown
+
+LABEL org.opencontainers.image.title="test-next-app" \
+      org.opencontainers.image.description="Signal Stim GUI hardened runtime image on Red Hat UBI 9.6 minimal" \
+      org.opencontainers.image.source="https://github.com/Mjwagner2277/test-next-app" \
+      org.opencontainers.image.revision="${VCS_REF}" \
+      org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.base.name="${UBI_MINIMAL_IMAGE}"
+
+WORKDIR /app
+
+# Runtime stage:
+# - production mode disables development-only behavior
+# - telemetry is disabled for deterministic runtime behavior
+# - HOME points at /tmp because numeric users often have no passwd entry
+# - --disable-proto=delete removes the legacy __proto__ accessor, reducing one
+#   common prototype-pollution path without changing normal object usage
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    NODE_OPTIONS=--disable-proto=delete \
+    PORT=3000 \
+    HOSTNAME=0.0.0.0 \
+    HOME=/tmp
+
+# Install only nodejs in the final image. npm, package-lock.json, source files,
+# TypeScript, Buf, and dev dependencies stay behind in builder stages.
+RUN microdnf module enable -y nodejs:${NODEJS_MODULE_STREAM} \
+    && microdnf install -y --setopt=install_weak_deps=0 nodejs \
+    && microdnf clean all \
+    && rm -rf /var/cache/yum /var/cache/dnf /tmp/* \
+    && mkdir -p /app /tmp \
+    && chown -R 10001:10001 /app /tmp
+
+# Numeric ownership and USER values avoid depending on /etc/passwd mutations.
+# Kubernetes and OpenShift can run this image as an arbitrary non-root identity.
+COPY --from=builder --chown=10001:10001 /app/.next/standalone ./
+COPY --from=builder --chown=10001:10001 /app/public ./public
+COPY --from=builder --chown=10001:10001 /app/.next/static ./.next/static
+
+USER 10001:10001
+EXPOSE 3000
+
+# Keep the image command simple. Kubernetes should own liveness/readiness
+# probing rather than baking cluster-specific health policy into the image.
+CMD ["node", "server.js"]
