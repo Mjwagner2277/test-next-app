@@ -1,0 +1,14 @@
+{{- if and .Values.gateway.enabled .Values.gateway.createGateway }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ include "test-next-app.fullname" . }}
+  labels:
+    {{- include "test-next-app.labels" . | nindent 4 }}
+spec:
+  gatewayClassName: {{ .Values.gateway.className | quote }}
+  listeners:
+    - name: {{ .Values.gateway.listener.name | quote }}
+      protocol: {{ .Values.gateway.listener.protocol | quote }}
+      port: {{ .Values.gateway.listener.port }}
+{{- end }}

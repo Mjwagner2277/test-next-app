@@ -13,18 +13,35 @@ import { SignalStimService } from '../gen/proto/controlpanel/v1/control_panel_pb
 export type SignalStimClient = Client<typeof SignalStimService>
 
 type ClientOptions = {
-  baseUrl: string
+  // Optional escape hatch for unusual local development. Production Gateway
+  // deployments should omit this so the browser calls the same origin that
+  // served the GUI.
+  baseUrl?: string
   authToken?: string
+}
+
+function resolveGrpcWebBaseUrl(baseUrl: string | undefined): string {
+  const trimmedBaseUrl = baseUrl?.trim() ?? ''
+
+  // Same-origin is the normal cluster path:
+  // browser -> Envoy Gateway -> app for page assets
+  // browser -> Envoy Gateway -> gRPC-Web route for service calls
+  if (trimmedBaseUrl.length === 0 && typeof globalThis.location !== 'undefined') {
+    return globalThis.location.origin
+  }
+
+  return trimmedBaseUrl
 }
 
 export function createSignalStimClient({
   baseUrl,
   authToken,
-}: ClientOptions): SignalStimClient {
+}: ClientOptions = {}): SignalStimClient {
   // ConnectRPC provides this gRPC-Web transport. The browser sends gRPC-Web to
-  // Envoy, and Envoy translates that request to native gRPC for the upstream.
+  // the same origin that served the GUI. Envoy Gateway owns routing those
+  // /controlpanel.v1.SignalStimService/* paths to the gRPC-Web endpoint.
   const transport = createGrpcWebTransport({
-    baseUrl,
+    baseUrl: resolveGrpcWebBaseUrl(baseUrl),
     interceptors: authToken
       ? [
           // Interceptors can add headers, log requests, or measure timing. This

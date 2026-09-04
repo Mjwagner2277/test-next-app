@@ -4,7 +4,7 @@
 // UI. Protocol-specific rendering lives under src/features/faults, while
 // transport setup lives under src/rpc. That gives the app room to grow into
 // additional gRPC APIs or other protocols without returning to one giant file.
-import { Box, Container, Paper } from '@mui/material'
+import { Alert, AlertTitle, Box, Container, Paper, Snackbar } from '@mui/material'
 import { useMemo, useState } from 'react'
 import { FaultConsoleHeader } from '@/features/faults/FaultConsoleHeader'
 import { FaultStateAside } from '@/features/faults/FaultStateAside'
@@ -27,7 +27,11 @@ import {
   createSignalStimClient,
   describeRpcError,
 } from '@/rpc/faultCoordinatorClient'
-import { useGrpcWebConfig } from '@/rpc/useGrpcWebConfig'
+
+type CommandFailureNotice = {
+  action: string
+  detail: string
+}
 
 export function ControlPanelConsole() {
   // Each row owns a selected fault variant. The valid values now come from the
@@ -46,23 +50,24 @@ export function ControlPanelConsole() {
   // gives the operator immediate feedback that a gRPC-Web call is underway.
   const [pendingAction, setPendingAction] = useState<string | null>(null)
 
-  const { grpcWebConfig, configError } = useGrpcWebConfig()
+  // Failed commands should be visible to the operator. A missing backend,
+  // rejected command, or Envoy routing issue should not silently look like an
+  // ignored button press.
+  const [commandFailure, setCommandFailure] =
+    useState<CommandFailureNotice | null>(null)
 
   // ConnectRPC clients are cheap, but useMemo prevents recreating the transport
-  // on every select change. It only changes after runtime config loads.
-  const client = useMemo(
-    () =>
-      grpcWebConfig ? createSignalStimClient(grpcWebConfig) : null,
-    [grpcWebConfig],
-  )
+  // on every select change. The client uses same-origin routing: Envoy Gateway
+  // receives the browser request on the GUI's port and routes gRPC-Web service
+  // paths to the backend instead of making Next.js discover a separate URL.
+  const client = useMemo(() => createSignalStimClient(), [])
 
   const activeFaultBySensorId = useMemo(
     () => new Map(activeFaults.map((fault) => [fault.sensorId, fault])),
     [activeFaults],
   )
   const faultCount = activeFaults.length
-  const canCall =
-    pendingAction === null && client !== null && configError === null
+  const canCall = pendingAction === null
 
   function selectVariant(sensorId: string, variant: FaultVariantId) {
     setSelectedVariants((current) => ({
@@ -72,10 +77,6 @@ export function ControlPanelConsole() {
   }
 
   function requireClient() {
-    if (!client) {
-      throw new Error('gRPC-Web configuration is still loading')
-    }
-
     return client
   }
 
@@ -86,6 +87,7 @@ export function ControlPanelConsole() {
     onSuccess,
   }: RpcRunOptions<Response>) {
     setPendingAction(name)
+    setCommandFailure(null)
 
     try {
       const response = await call()
@@ -95,12 +97,25 @@ export function ControlPanelConsole() {
       // bare ResponseStatus from leaking into the fault-command response path.
       if (commandSucceeded) {
         onSuccess?.()
+      } else {
+        setCommandFailure({
+          action: name,
+          detail:
+            'The coordinator returned a failure status. Local fault state was not changed.',
+        })
       }
     } catch (error) {
-      globalThis.console.warn(`${name} failed: ${describeRpcError(error)}`)
+      const detail = describeRpcError(error)
+
+      setCommandFailure({ action: name, detail })
+      globalThis.console.warn(`${name} failed: ${detail}`)
     } finally {
       setPendingAction(null)
     }
+  }
+
+  function clearCommandFailure() {
+    setCommandFailure(null)
   }
 
   function injectFault(sensor: SensorRow) {
@@ -223,6 +238,34 @@ export function ControlPanelConsole() {
           </Box>
         </Paper>
       </Container>
+      <Snackbar
+        open={commandFailure !== null}
+        onClose={clearCommandFailure}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          severity="warning"
+          variant="filled"
+          onClose={clearCommandFailure}
+          sx={{
+            alignItems: 'center',
+            border: '1px solid #f0bf58',
+            bgcolor: '#5a3510',
+            color: '#fff7df',
+            maxWidth: { xs: 'calc(100vw - 32px)', sm: 560 },
+            '& .MuiAlert-icon': {
+              color: '#ffd98a',
+            },
+          }}
+        >
+          <AlertTitle sx={{ color: 'inherit', fontWeight: 800 }}>
+            Command failed
+          </AlertTitle>
+          {commandFailure
+            ? `${commandFailure.action}: ${commandFailure.detail}`
+            : ''}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }

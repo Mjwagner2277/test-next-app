@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Signal Stim GUI Code Architecture",
+    "output": "docs/code-architecture.html",
+    "quality_profile": "showcase",
+    "viewBox": [1380, 800]
+  },
+  "components": [
+    {
+      "id": "operatorBrowser",
+      "type": "external",
+      "label": "Operator Browser",
+      "sublabel": "interactive GUI session",
+      "pos": [40, 340],
+      "size": [140, 64]
+    },
+    {
+      "id": "homeRoute",
+      "type": "frontend",
+      "label": "Home Route",
+      "sublabel": "src/app/page.tsx",
+      "pos": [230, 340],
+      "size": [132, 64]
+    },
+    {
+      "id": "providers",
+      "type": "frontend",
+      "label": "MUI Providers",
+      "sublabel": "theme wrapper",
+      "pos": [420, 340],
+      "size": [136, 64]
+    },
+    {
+      "id": "console",
+      "type": "frontend",
+      "label": "ControlPanelConsole",
+      "sublabel": "state + command coordinator",
+      "pos": [580, 340],
+      "size": [170, 72]
+    },
+    {
+      "id": "matrix",
+      "type": "frontend",
+      "label": "SensorFaultMatrix",
+      "sublabel": "rows, selects, actions",
+      "pos": [780, 145],
+      "size": [160, 70]
+    },
+    {
+      "id": "aside",
+      "type": "frontend",
+      "label": "FaultStateAside",
+      "sublabel": "active list + legend",
+      "pos": [780, 535],
+      "size": [160, 70]
+    },
+    {
+      "id": "styles",
+      "type": "frontend",
+      "label": "faultUiStyles",
+      "sublabel": "shared MUI sx blocks",
+      "pos": [985, 55],
+      "size": [152, 70]
+    },
+    {
+      "id": "faultModel",
+      "type": "backend",
+      "label": "faultModel",
+      "sublabel": "classes + mapping",
+      "pos": [985, 535],
+      "size": [166, 70]
+    },
+    {
+      "id": "rpcClient",
+      "type": "backend",
+      "label": "ConnectRPC Client",
+      "sublabel": "same-origin gRPC-Web",
+      "pos": [985, 340],
+      "size": [166, 72]
+    },
+    {
+      "id": "generatedProto",
+      "type": "backend",
+      "label": "Generated Proto Types",
+      "sublabel": "Buf output in src/gen",
+      "pos": [985, 235],
+      "size": [166, 72]
+    },
+    {
+      "id": "signalStimService",
+      "type": "external",
+      "label": "SignalStimService",
+      "sublabel": "server-hosted gRPC API",
+      "pos": [1210, 340],
+      "size": [140, 72]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Next.js app source",
+      "wraps": ["homeRoute", "providers", "console"],
+      "pad": 18
+    },
+    {
+      "kind": "region",
+      "label": "Fault feature module",
+      "wraps": ["matrix", "aside", "styles", "faultModel"],
+      "pad": 18
+    },
+    {
+      "kind": "region",
+      "label": "Typed RPC layer",
+      "wraps": ["rpcClient", "generatedProto"],
+      "pad": 18
+    }
+  ],
+  "connections": [
+    {
+      "from": "operatorBrowser",
+      "to": "homeRoute",
+      "label": "GET /",
+      "variant": "emphasis"
+    },
+    {
+      "from": "homeRoute",
+      "to": "providers",
+      "label": "renders"
+    },
+    {
+      "from": "providers",
+      "to": "console"
+    },
+    {
+      "from": "console",
+      "to": "matrix",
+      "label": "selected variants + handlers"
+    },
+    {
+      "from": "console",
+      "to": "aside",
+      "label": "active fault state"
+    },
+    {
+      "from": "matrix",
+      "to": "styles",
+      "variant": "dashed"
+    },
+    {
+      "from": "aside",
+      "to": "faultModel"
+    },
+    {
+      "from": "console",
+      "to": "rpcClient",
+      "label": "setSignal / removeSignals / resetAll",
+      "variant": "emphasis"
+    },
+    {
+      "from": "rpcClient",
+      "to": "generatedProto"
+    },
+    {
+      "from": "rpcClient",
+      "to": "signalStimService",
+      "label": "gRPC-Web service paths",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelAt": [1180, 430]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Runtime State",
+      "items": [
+        "ControlPanelConsole owns selected variants, active faults, pending RPC state, and visible command failures",
+        "Faults start empty and update only after a successful coordinator response"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Extensibility Point",
+      "items": [
+        "faultModel maps operator-friendly rows to proto Signal payloads",
+        "New sensors usually add row data, fault class references, and signal mappings"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "RPC Boundary",
+      "items": [
+        "ConnectRPC uses generated Buf types and the gRPC-Web transport",
+        "The browser calls the same origin; Envoy owns routing to the backend"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+# Local kind profile. This assumes the release name is `test-next-app`.
+image:
+  repository: test-next-app
+  tag: kind
+  pullPolicy: IfNotPresent
+
+gateway:
+  enabled: true
+  createGatewayClass: true
+  createGateway: true
+  className: eg

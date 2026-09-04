@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Signal Stim GUI Kubernetes Deployment",
+    "output": "docs/kubernetes-deployment.html",
+    "quality_profile": "showcase",
+    "viewBox": [1380, 780]
+  },
+  "components": [
+    {
+      "id": "operatorBrowser",
+      "type": "external",
+      "label": "Operator Browser",
+      "sublabel": "same port",
+      "pos": [40, 340],
+      "size": [140, 70]
+    },
+    {
+      "id": "gatewayController",
+      "type": "cloud",
+      "label": "Envoy Gateway Controller",
+      "sublabel": "envoy-gateway-system",
+      "pos": [230, 110],
+      "size": [176, 70]
+    },
+    {
+      "id": "gatewayDataPlane",
+      "type": "security",
+      "label": "Gateway Data Plane",
+      "sublabel": "listener :80",
+      "pos": [230, 340],
+      "size": [176, 70]
+    },
+    {
+      "id": "httpRoute",
+      "type": "security",
+      "label": "HTTPRoute",
+      "sublabel": "path-based split",
+      "pos": [470, 340],
+      "size": [154, 70]
+    },
+    {
+      "id": "appService",
+      "type": "cloud",
+      "label": "Next.js Service",
+      "sublabel": "ClusterIP :3000",
+      "pos": [720, 185],
+      "size": [152, 70]
+    },
+    {
+      "id": "appPod",
+      "type": "frontend",
+      "label": "Next.js App Pod",
+      "sublabel": "test-next-app image",
+      "pos": [960, 185],
+      "size": [160, 70]
+    },
+    {
+      "id": "grpcWebService",
+      "type": "cloud",
+      "label": "gRPC-Web Service",
+      "sublabel": "ClusterIP :8080",
+      "pos": [720, 495],
+      "size": [152, 70]
+    },
+    {
+      "id": "grpcWebProxy",
+      "type": "security",
+      "label": "Chart Envoy Proxy",
+      "sublabel": "grpc_web filter",
+      "pos": [960, 495],
+      "size": [160, 70]
+    },
+    {
+      "id": "nativeGrpcServer",
+      "type": "external",
+      "label": "Native gRPC Server",
+      "sublabel": "SignalStimService :9090",
+      "pos": [1200, 495],
+      "size": [150, 70]
+    },
+    {
+      "id": "helmChart",
+      "type": "cloud",
+      "label": "Helm Chart",
+      "sublabel": "helm/test-next-app",
+      "pos": [470, 675],
+      "size": [154, 70]
+    },
+    {
+      "id": "dockerBuild",
+      "type": "cloud",
+      "label": "Docker Build",
+      "sublabel": "build/Dockerfile",
+      "pos": [720, 55],
+      "size": [152, 70]
+    },
+    {
+      "id": "appImage",
+      "type": "cloud",
+      "label": "App Image",
+      "sublabel": "loaded into kind or pulled",
+      "pos": [960, 55],
+      "size": [160, 70]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "envoy-gateway-system namespace",
+      "wraps": ["gatewayController", "gatewayDataPlane"],
+      "pad": 18
+    },
+    {
+      "kind": "region",
+      "label": "default namespace / test-next-app release",
+      "wraps": ["httpRoute", "appService", "appPod", "grpcWebService", "grpcWebProxy"],
+      "pad": 18
+    },
+    {
+      "kind": "security-group",
+      "label": "same-origin request boundary",
+      "wraps": ["gatewayDataPlane", "httpRoute"],
+      "pad": 14
+    }
+  ],
+  "connections": [
+    {
+      "from": "operatorBrowser",
+      "to": "gatewayDataPlane",
+      "label": "HTTP on GUI port",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": 56
+    },
+    {
+      "from": "gatewayController",
+      "to": "gatewayDataPlane",
+      "label": "programs Envoy",
+      "variant": "dashed",
+      "labelAt": [318, 230]
+    },
+    {
+      "from": "gatewayDataPlane",
+      "to": "httpRoute"
+    },
+    {
+      "from": "httpRoute",
+      "to": "appService",
+      "label": "/*",
+      "variant": "emphasis"
+    },
+    {
+      "from": "appService",
+      "to": "appPod",
+      "label": "serve Next.js"
+    },
+    {
+      "from": "httpRoute",
+      "to": "grpcWebService",
+      "label": "/controlpanel.v1.SignalStimService/*",
+      "variant": "emphasis"
+    },
+    {
+      "from": "grpcWebService",
+      "to": "grpcWebProxy",
+      "label": "gRPC-Web :8080"
+    },
+    {
+      "from": "grpcWebProxy",
+      "to": "nativeGrpcServer",
+      "label": "HTTP/2 native gRPC",
+      "variant": "security",
+      "labelDy": 59
+    },
+    {
+      "from": "helmChart",
+      "to": "httpRoute",
+      "label": "renders Gateway API",
+      "variant": "dashed"
+    },
+    {
+      "from": "dockerBuild",
+      "to": "appImage",
+      "variant": "dashed"
+    },
+    {
+      "from": "appImage",
+      "to": "appPod"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Same-Port Routing",
+      "items": [
+        "The browser uses the same origin for GUI assets and gRPC-Web calls",
+        "HTTPRoute sends service paths to Envoy and all other paths to Next.js"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "gRPC-Web Bridge",
+      "items": [
+        "The chart-managed Envoy proxy applies the grpc_web filter",
+        "The native gRPC server stays behind cluster routing and is not exposed to browser config"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Local Kind Loop",
+      "items": [
+        "Build with build/Dockerfile, load the image into kind, then install the Helm chart",
+        "Port-forward the Envoy Gateway data-plane service to test the same external port locally"
+      ]
+    }
+  ]
+}

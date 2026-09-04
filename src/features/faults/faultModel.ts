@@ -129,16 +129,9 @@ export const SENSOR_ROWS: SensorRow[] = [
   },
 ]
 
-// Seed one fault during UI review so the active-fault display, highlighted row,
-// and remove/reset controls can be inspected immediately on page load.
-export const INITIAL_ACTIVE_FAULTS: ActiveFault[] = [
-  {
-    sensorId: 'temperature-a',
-    variant: 'high',
-    insertedAt: 'on startup',
-    detail: 'Seeded for UI review',
-  },
-]
+// Start from a blank slate. The UI only marks faults active after the
+// coordinator accepts an inject command during this browser session.
+export const INITIAL_ACTIVE_FAULTS: ActiveFault[] = []
 
 export const defaultSelectedVariants = Object.fromEntries(
   SENSOR_ROWS.map((sensor) => [sensor.id, sensor.defaultVariant]),

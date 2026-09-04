@@ -4,19 +4,27 @@ image:
   tag: latest
   pullPolicy: IfNotPresent
 
-# Public URL the browser uses for gRPC-Web calls. In this chart, Envoy is
-# exposed as a separate Service, so this should point at Envoy's reachable URL.
-grpcWebProxyUrl: http://localhost:8080
-
-# This value is returned to the browser by /api/grpc-config. Leave empty
-# unless it is safe for end users to inspect.
-grpcWebAuthToken: ""
-
 # Native gRPC server reached by Envoy. In Kubernetes this is usually a Service
-# DNS name, for example: control-panel-api.default.svc.cluster.local.
+# DNS name, for example: control-panel-api.default.svc.cluster.local. The
+# browser does not receive this value; Envoy/Gateway routing keeps it internal.
 upstreamGrpc:
   host: control-panel-grpc.default.svc.cluster.local
   port: 9090
+
+# Optional Gateway API HTTPRoute for Envoy Gateway same-port routing. Enable
+# this when the chart should attach the GUI and gRPC-Web routes to an existing
+# Gateway listener.
+gateway:
+  enabled: false
+  createGatewayClass: false
+  createGateway: false
+  className: eg
+  hostnames: []
+  parentRefs: []
+  listener:
+    name: http
+    protocol: HTTP
+    port: 80
 
 app:
   replicaCount: 1
@@ -27,7 +35,8 @@ app:
 envoy:
   image:
     repository: envoyproxy/envoy
-    tag: latest
+    # Envoy does not publish a plain `latest` tag, so pin a verified image tag.
+    tag: v1.36.0
     pullPolicy: IfNotPresent
   replicaCount: 1
   service:
