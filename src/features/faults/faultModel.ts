@@ -18,10 +18,11 @@ type FaultVariantOptionConfig = {
   color: string
 }
 
-// Fault classes are the operator-facing categories of fault behavior. Adding a
-// new class means adding one object here, then pointing any matching sensor rows
-// at its id through sensor.faultClassId. The id types below are derived from
-// this list, so TypeScript will catch typos in sensor rows.
+// Classes define the dropdown choices, not the signals that create a fault.
+// Each row supplies its own signal suite for every choice in its class. For
+// example, several rows can use State -> Unknown with different sets of signals.
+// Add a class here to introduce new choices; the id types below are derived
+// from this list so TypeScript catches mismatched row mappings.
 export const FAULT_CLASSES = [
   {
     id: 'threshold',
@@ -47,6 +48,13 @@ export const FAULT_CLASSES = [
       { id: 'shut', label: 'Shut', color: '#71cf84' },
     ],
   },
+  {
+    id: 'state',
+    label: 'State',
+    variants: [
+      { id: 'unknown', label: 'Unknown', color: '#f0bf58' },
+    ],
+  },
 ] as const satisfies readonly FaultClassConfig[]
 
 export type FaultClass = (typeof FAULT_CLASSES)[number]
@@ -63,6 +71,8 @@ type FaultVariantIdForClass<Id extends FaultClassId> =
 export type SelectedFaultVariants = Partial<Record<string, FaultVariantId>>
 
 type BaseSensorRow = {
+  // A row represents one user-facing fault target. It can coordinate several
+  // physical sensors, such as "XXXX state unknown".
   id: string
   name: string
   location: string

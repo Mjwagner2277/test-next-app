@@ -12,6 +12,8 @@ import {
 } from '../src/gen/proto/controlpanel/v1/control_panel_pb'
 import {
   SENSOR_ROWS,
+  getFaultVariantOptions,
+  getSelectedFaultVariant,
   isSignalsResponseSuccessful,
   toSignals,
   upsertActiveFault,
@@ -54,6 +56,41 @@ function conflictRow(): SensorRow {
         },
         {
           signalId: 4002n,
+          cardModel: CardModel.TYPE2,
+          signalValue: { case: 'discrete', value: true },
+        },
+      ],
+    },
+  }
+}
+
+function unknownStateRow(): SensorRow {
+  return {
+    id: 'xxxx-state-unknown',
+    name: 'XXXX state unknown',
+    location: 'Zone 1',
+    liveReading: 'Known',
+    faultClassId: 'state',
+    defaultVariant: 'unknown',
+    signalMapping: {
+      unknown: [
+        {
+          signalId: 5001n,
+          cardModel: CardModel.TYPE1,
+          signalValue: { case: 'discrete', value: false },
+        },
+        {
+          signalId: 5002n,
+          cardModel: CardModel.TYPE1,
+          signalValue: { case: 'discrete', value: false },
+        },
+        {
+          signalId: 5003n,
+          cardModel: CardModel.TYPE2,
+          signalValue: { case: 'discrete', value: true },
+        },
+        {
+          signalId: 5004n,
           cardModel: CardModel.TYPE2,
           signalValue: { case: 'discrete', value: true },
         },
@@ -119,6 +156,27 @@ test('each fault choice can use its own complete signal set', () => {
   assert.notEqual(high[0].cardModel, high[1].cardModel)
 })
 
+test('a named unknown-state fault selects four signals and occupies one active row', () => {
+  const sensor = unknownStateRow()
+  const variant = getSelectedFaultVariant(sensor, {})
+
+  assert.equal(variant, 'unknown')
+  assert.deepEqual(
+    getFaultVariantOptions(sensor).map(({ id, label }) => ({ id, label })),
+    [{ id: 'unknown', label: 'Unknown' }],
+  )
+  assert.equal(sensor.faultClassId, 'state')
+  assert.equal(toSignals(sensor, variant).length, 4)
+  assert.deepEqual(toSignals(sensor, variant), sensor.signalMapping.unknown)
+
+  const active: ActiveFault = {
+    sensorId: sensor.id, variant, insertedAt: 'now', detail: 'Accepted',
+  }
+  const afterInject = upsertActiveFault([], active)
+  assert.deepEqual(afterInject, [active])
+  assert.deepEqual(upsertActiveFault(afterInject, active), [active])
+})
+
 test('requests do not share mutable signals or oneof values with configuration', () => {
   const sensor = conflictRow()
   assert.equal(sensor.faultClassId, 'threshold')
@@ -164,17 +222,21 @@ test('both set and remove RPCs carry the full selected group in one request', as
     })
   })
   const client = createClient(SignalStimService, transport)
-  const sensor = conflictRow()
+  for (const sensor of [conflictRow(), unknownStateRow()]) {
+    const variant = getSelectedFaultVariant(sensor, {})
+    const signals = toSignals(sensor, variant)
+    received.length = 0
 
-  const setResponse = await client.setSignal({ signals: toSignals(sensor, 'high') })
-  const removeResponse = await client.removeSignals({ signals: toSignals(sensor, 'high') })
+    const setResponse = await client.setSignal({ signals })
+    const removeResponse = await client.removeSignals({ signals: toSignals(sensor, variant) })
 
-  assert.equal(isSignalsResponseSuccessful(setResponse), true)
-  assert.equal(isSignalsResponseSuccessful(removeResponse), true)
-  assert.deepEqual(received, [
-    { method: 'set', signals: toSignals(sensor, 'high') },
-    { method: 'remove', signals: toSignals(sensor, 'high') },
-  ])
+    assert.equal(isSignalsResponseSuccessful(setResponse), true)
+    assert.equal(isSignalsResponseSuccessful(removeResponse), true)
+    assert.deepEqual(received, [
+      { method: 'set', signals },
+      { method: 'remove', signals },
+    ])
+  }
 })
 
 test('a variant not offered by a row is rejected', () => {

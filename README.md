@@ -255,24 +255,37 @@ The UI expects the backend to implement `controlpanel.v1.SignalStimService`:
 - `RemoveSignals` sends one `SignalsRequest` containing all signals mapped to the active fault variant.
 - `ResetAll` accepts an empty `Empty` request, clears all injected signals, and returns `ResponseStatus` directly.
 
-The UI still shows friendly variants such as `High`, `Low`, `Open`, or `Engaged`. `src/features/faults/faultModel.ts` maps each choice to a nonempty list of signals. Each member has its own `signalId`, `cardModel`, and `signalValue` oneof. A suite remains one active fault, regardless of how many signals it sends. Existing single-signal rows use one-element lists.
+The UI still shows friendly variants such as `High`, `Low`, `Open`, `Engaged`, or `Unknown`. `src/features/faults/faultModel.ts` maps each choice to a nonempty list of signals. Each member has its own `signalId`, `cardModel`, and `signalValue` oneof. A suite remains one active fault, regardless of how many signals it sends. Existing single-signal rows use one-element lists.
 
 `SetSignal` and `RemoveSignals` return `SignalsResponse`, which contains a nested `ResponseStatus` message named `response_status` and repeated `SignalError` entries named `signal_errors`. `ResetAll` returns `ResponseStatus` directly. Any per-signal error makes the whole fault command unsuccessful, including when the top-level status is success.
 
 ### Configuring a multi-signal fault
 
-Each row's `signalMapping` maps every variant in its fault class to a complete signal list. Variants may use different numbers of signals, IDs, card models, and value types. For example, a sensor conflict row can stimulate opposing position inputs while appearing as one fault:
+Fault classes define the choices available in a row's dropdown. The row defines the signals to send for each choice. A class does not send signals itself, and it does not require one physical sensor per row. Several named faults can share the `state` class while each configures its own three or four signals for `unknown`.
+
+For a fault named **XXXX state unknown**, the mapping is:
+
+| Field | Meaning | Example |
+| --- | --- | --- |
+| `name` | The user-facing fault target | `XXXX state unknown` |
+| `faultClassId` | Which set of dropdown choices the row uses | `state` |
+| `defaultVariant` | The initially selected choice | `unknown` |
+| `signalMapping.unknown` | All signals sent together for that choice | A list of four signal payloads |
+
+The `state` class supplies a single `Unknown` choice, so this fault needs only an `unknown` mapping. Choosing Inject sends all four signals in one request and records one active fault. Remove sends the same four signals in one removal request. No additional UI components are needed.
+
+Use a row like this in `SENSOR_ROWS` after replacing the illustrative IDs and values with the combination that produces Unknown in your coordinator:
 
 ```ts
-const sensorConflict: SensorRow = {
-  id: 'sensor-conflict',
-  name: 'Sensor conflict fault',
-  location: 'Access panel',
-  liveReading: 'Consistent',
-  faultClassId: 'position',
-  defaultVariant: 'open',
+const unknownStateFault: SensorRow = {
+  id: 'xxxx-state-unknown',
+  name: 'XXXX state unknown',
+  location: 'Subsystem XXXX',
+  liveReading: 'Known',
+  faultClassId: 'state',
+  defaultVariant: 'unknown',
   signalMapping: {
-    open: [
+    unknown: [
       {
         signalId: 3001n,
         cardModel: CardModel.TYPE2,
@@ -281,17 +294,15 @@ const sensorConflict: SensorRow = {
       {
         signalId: 3002n,
         cardModel: CardModel.TYPE2,
-        signalValue: { case: 'discrete', value: true },
+        signalValue: { case: 'discrete', value: false },
       },
-    ],
-    shut: [
       {
-        signalId: 3001n,
+        signalId: 3003n,
         cardModel: CardModel.TYPE2,
         signalValue: { case: 'discrete', value: true },
       },
       {
-        signalId: 3002n,
+        signalId: 3004n,
         cardModel: CardModel.TYPE2,
         signalValue: { case: 'discrete', value: false },
       },
@@ -300,7 +311,9 @@ const sensorConflict: SensorRow = {
 }
 ```
 
-These IDs and values are illustrative; use the coordinator's actual mappings before adding a row to `SENSOR_ROWS`. Append further signals to a variant's list as needed. The model rejects missing variants, empty lists, and duplicate `(cardModel, signalId)` identities within a variant before sending a request. Signal IDs remain `bigint` to preserve the protobuf's `uint64` range.
+The word `unknown` is a UI/configuration key; only the four signal payloads are sent to the coordinator. The example values do not automatically guarantee an Unknown state: configure the actual combination your fault-detection rules expect. Remove one entry for a three-signal fault, or append entries for a larger suite. Each row and variant may use different signal IDs, card models, and value types.
+
+To introduce another dropdown choice, such as `Conflict`, add it to an appropriate entry in `FAULT_CLASSES`, then supply a signal list under that variant's ID for every row using the class. The model rejects missing variants, empty lists, and duplicate `(cardModel, signalId)` identities within a variant before sending a request. Signal IDs remain `bigint` to preserve the protobuf's `uint64` range.
 
 The external coordinator implements the actual fault detection/rollup rules. Its server implementation is not in this repository. The existing repeated-signal RPC needs no schema change, but batching alone does not guarantee atomic application or removal. The coordinator must handle the full list and report failures; if it can apply only part of a batch, the operator can use `Reset faults` to clear all injected signals. Until the coordinator provides shared-signal ownership, avoid overlapping signal identities across rows that can be active together.
 
