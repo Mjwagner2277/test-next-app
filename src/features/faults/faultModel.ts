@@ -2,8 +2,9 @@ import {
   CardModel,
   Status,
   type ResponseStatus,
+  type Signal,
   type SignalsResponse,
-} from '@/gen/proto/controlpanel/v1/control_panel_pb'
+} from '../../gen/proto/controlpanel/v1/control_panel_pb'
 
 type FaultClassConfig = {
   id: string
@@ -97,16 +98,24 @@ export const SENSOR_ROWS: SensorRow[] = [
     location: 'Zone 1 inlet',
     liveReading: '72.4 F',
     // The threshold class gives this row a High/Low dropdown. Each id used by
-    // that class should have a matching proto payload in signalMapping.values.
+    // that class maps to one or more signals in signalMapping.
     faultClassId: 'threshold',
     defaultVariant: 'high',
     signalMapping: {
-      signalId: 1001n,
-      cardModel: CardModel.TYPE1,
-      values: {
-        high: { case: 'analog', value: 4095 },
-        low: { case: 'analog', value: 0 },
-      },
+      high: [
+        {
+          signalId: 1001n,
+          cardModel: CardModel.TYPE1,
+          signalValue: { case: 'analog', value: 4095 },
+        },
+      ],
+      low: [
+        {
+          signalId: 1001n,
+          cardModel: CardModel.TYPE1,
+          signalValue: { case: 'analog', value: 0 },
+        },
+      ],
     },
   },
   {
@@ -119,12 +128,20 @@ export const SENSOR_ROWS: SensorRow[] = [
     faultClassId: 'position',
     defaultVariant: 'open',
     signalMapping: {
-      signalId: 2001n,
-      cardModel: CardModel.TYPE2,
-      values: {
-        open: { case: 'discrete', value: false },
-        shut: { case: 'discrete', value: true },
-      },
+      open: [
+        {
+          signalId: 2001n,
+          cardModel: CardModel.TYPE2,
+          signalValue: { case: 'discrete', value: false },
+        },
+      ],
+      shut: [
+        {
+          signalId: 2001n,
+          cardModel: CardModel.TYPE2,
+          signalValue: { case: 'discrete', value: true },
+        },
+      ],
     },
   },
 ]
@@ -199,24 +216,44 @@ export function getFaultVariantColor(
   return getFaultVariantOption(sensor, variant)?.color ?? '#c5d0da'
 }
 
-export function toSignal(sensor: SensorRow, variant: FaultVariantId) {
-  // This is the abstraction layer between the operator table and the proto. The
-  // UI never needs to expose card model enum values or signal ids; rows own that
-  // mapping here.
-  const signalValues = sensor.signalMapping.values as Partial<
-    Record<FaultVariantId, SignalValue>
+export function toSignals(
+  sensor: SensorRow,
+  variant: FaultVariantId,
+): FaultSignal[] {
+  // One operator-facing fault can stimulate several physical signals. Each
+  // variant owns its complete suite, including each member's identity and value.
+  const signalMapping = sensor.signalMapping as Partial<
+    Record<FaultVariantId, readonly FaultSignal[]>
   >
-  const signalValue = signalValues[variant]
+  const signals = signalMapping[variant]
 
-  if (!signalValue) {
+  if (!signals) {
     throw new Error(`${sensor.name} does not define variant "${variant}"`)
   }
 
-  return {
-    signalId: sensor.signalMapping.signalId,
-    cardModel: sensor.signalMapping.cardModel,
-    signalValue,
+  if (signals.length === 0) {
+    throw new Error(
+      `${sensor.name} variant "${variant}" must define at least one signal`,
+    )
   }
+
+  const signalKeys = new Set<string>()
+
+  return signals.map((signal) => {
+    const key = `${signal.cardModel}:${signal.signalId}`
+
+    if (signalKeys.has(key)) {
+      throw new Error(
+        `${sensor.name} variant "${variant}" repeats signal ${key}`,
+      )
+    }
+
+    signalKeys.add(key)
+
+    // Requests get independent objects so transport code cannot mutate the
+    // configured suite needed later by RemoveSignals.
+    return { ...signal, signalValue: { ...signal.signalValue } }
+  })
 }
 
 export function upsertActiveFault(
@@ -231,22 +268,20 @@ export function upsertActiveFault(
 }
 
 export function isSignalsResponseSuccessful(response: SignalsResponse) {
-  // setSignal/removeSignals return the full response. It can include per-signal
-  // errors, but this first UI pass only gates local state on the response status.
-  return isResponseStatusSuccessful(response.responseStatus)
+  // A suite counts as one fault only when the whole command is accepted.
+  return (
+    isResponseStatusSuccessful(response.responseStatus) &&
+    response.signalErrors.length === 0
+  )
 }
 
 export function isResponseStatusSuccessful(responseStatus?: ResponseStatus) {
   return responseStatus?.status === Status.SUCCESS
 }
 
-type SignalMapping<VariantId extends FaultVariantId = FaultVariantId> = {
-  signalId: bigint
-  cardModel: CardModel
-  values: Record<VariantId, SignalValue>
+export type FaultSignal = Pick<Signal, 'signalId' | 'cardModel'> & {
+  signalValue: Exclude<Signal['signalValue'], { case: undefined }>
 }
 
-type SignalValue =
-  | { case: 'discrete'; value: boolean }
-  | { case: 'analog'; value: number }
-  | { case: 'serial'; value: string }
+export type SignalMapping<VariantId extends FaultVariantId = FaultVariantId> =
+  Record<VariantId, readonly [FaultSignal, ...FaultSignal[]]>

@@ -10,6 +10,7 @@
     "image:build:ubi-hardened": "build/build-ubi-hardened.sh",
     "build": "next build",
     "lint": "oxlint",
+    "test": "tsc -p tests/tsconfig.json && node --test tests/.build/tests/*.test.js",
     "start": "next start"
   },
   "dependencies": {

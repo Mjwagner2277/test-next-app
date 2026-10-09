@@ -236,8 +236,8 @@ That build uses `build/Dockerfile.ubi-hardened` and is documented in `docs/conta
 8. Envoy's `grpc_web` filter translates the request for the native gRPC server when using the chart-managed Envoy proxy.
 9. Envoy forwards the request to the `native_grpc_server` upstream.
 10. The response comes back through Envoy as either `SignalsResponse` for set/remove or `ResponseStatus` for reset.
-11. If the response status is `STATUS_SUCCESS`, the browser updates its local active fault display. If the status is `STATUS_FAILURE`, the display is left unchanged.
-12. `SignalsResponse.signal_errors` is generated and available to the browser for set/remove responses, but the current UI intentionally ignores it.
+11. For set/remove, the browser updates its local active fault display only when the response status is `STATUS_SUCCESS` and `signal_errors` is empty. Reset requires `STATUS_SUCCESS`.
+12. Failed commands leave the local fault display unchanged and keep `Reset faults` available, even if no complete fault is active, so the operator can clear signals after a partial batch or lost response.
 
 ## Service Contract
 
@@ -251,13 +251,58 @@ npm run proto:gen
 
 The UI expects the backend to implement `controlpanel.v1.SignalStimService`:
 
-- `SetSignal` sends a `SignalsRequest` with one mapped `Signal`.
-- `RemoveSignals` sends a `SignalsRequest` with one mapped `Signal`.
+- `SetSignal` sends one `SignalsRequest` containing all signals mapped to the selected fault variant.
+- `RemoveSignals` sends one `SignalsRequest` containing all signals mapped to the active fault variant.
 - `ResetAll` accepts an empty `Empty` request, clears all injected signals, and returns `ResponseStatus` directly.
 
-The UI still shows friendly variants such as `High`, `Low`, `Open`, or `Engaged`. `src/features/faults/faultModel.ts` maps those choices to generated `Signal` fields such as `signalId`, `cardModel`, and the `signalValue` oneof.
+The UI still shows friendly variants such as `High`, `Low`, `Open`, or `Engaged`. `src/features/faults/faultModel.ts` maps each choice to a nonempty list of signals. Each member has its own `signalId`, `cardModel`, and `signalValue` oneof. A suite remains one active fault, regardless of how many signals it sends. Existing single-signal rows use one-element lists.
 
-`SetSignal` and `RemoveSignals` return `SignalsResponse`, which contains a nested `ResponseStatus` message named `response_status` and repeated `SignalError` entries named `signal_errors`. `ResetAll` returns `ResponseStatus` directly. The UI currently treats only `Status.STATUS_SUCCESS` as successful and ignores the error list until the display needs richer failure details.
+`SetSignal` and `RemoveSignals` return `SignalsResponse`, which contains a nested `ResponseStatus` message named `response_status` and repeated `SignalError` entries named `signal_errors`. `ResetAll` returns `ResponseStatus` directly. Any per-signal error makes the whole fault command unsuccessful, including when the top-level status is success.
+
+### Configuring a multi-signal fault
+
+Each row's `signalMapping` maps every variant in its fault class to a complete signal list. Variants may use different numbers of signals, IDs, card models, and value types. For example, a sensor conflict row can stimulate opposing position inputs while appearing as one fault:
+
+```ts
+const sensorConflict: SensorRow = {
+  id: 'sensor-conflict',
+  name: 'Sensor conflict fault',
+  location: 'Access panel',
+  liveReading: 'Consistent',
+  faultClassId: 'position',
+  defaultVariant: 'open',
+  signalMapping: {
+    open: [
+      {
+        signalId: 3001n,
+        cardModel: CardModel.TYPE2,
+        signalValue: { case: 'discrete', value: false },
+      },
+      {
+        signalId: 3002n,
+        cardModel: CardModel.TYPE2,
+        signalValue: { case: 'discrete', value: true },
+      },
+    ],
+    shut: [
+      {
+        signalId: 3001n,
+        cardModel: CardModel.TYPE2,
+        signalValue: { case: 'discrete', value: true },
+      },
+      {
+        signalId: 3002n,
+        cardModel: CardModel.TYPE2,
+        signalValue: { case: 'discrete', value: false },
+      },
+    ],
+  },
+}
+```
+
+These IDs and values are illustrative; use the coordinator's actual mappings before adding a row to `SENSOR_ROWS`. Append further signals to a variant's list as needed. The model rejects missing variants, empty lists, and duplicate `(cardModel, signalId)` identities within a variant before sending a request. Signal IDs remain `bigint` to preserve the protobuf's `uint64` range.
+
+The external coordinator implements the actual fault detection/rollup rules. Its server implementation is not in this repository. The existing repeated-signal RPC needs no schema change, but batching alone does not guarantee atomic application or removal. The coordinator must handle the full list and report failures; if it can apply only part of a batch, the operator can use `Reset faults` to clear all injected signals. Until the coordinator provides shared-signal ownership, avoid overlapping signal identities across rows that can be active together.
 
 ## App Structure
 

@@ -55,9 +55,8 @@ export function FaultConsoleHeader({
           variant="outlined"
           startIcon={<DeleteSweepIcon />}
           onClick={onResetFaults}
-          // Fault reset is tied to the fault workflow. It should only be
-          // available when the app can call the service and there is something
-          // active to clear.
+          // Reset is available for active faults and for signals that may have
+          // been applied by a failed command, when the service can be called.
           disabled={!canResetFaults}
           sx={resetFaultButtonSx}
         >
