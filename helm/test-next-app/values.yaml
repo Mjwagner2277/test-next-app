@@ -31,16 +31,6 @@ app:
   service:
     type: ClusterIP
     port: 3000
-  rpc:
-    # Empty uses http://<release-fullname>-envoy:<envoy.service.port>.
-    # Override with a gRPC-Web endpoint reachable from the Next.js container.
-    # This server-only address is never selected by a browser request.
-    upstreamUrl: ""
-    # Maximum upstream call duration; a shorter caller deadline still applies.
-    timeoutMs: 30000
-    # Cap each decoded request/response payload in stdout JSON logs only.
-    # Larger payloads have a marked preview; forwarded signals are unchanged.
-    logMaxPayloadBytes: 65536
 
 envoy:
   image:
