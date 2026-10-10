@@ -61,9 +61,8 @@ export function ControlPanelConsole() {
     useState<CommandFailureNotice | null>(null)
 
   // ConnectRPC clients are cheap, but useMemo prevents recreating the transport
-  // on every select change. The client uses same-origin routing: Envoy Gateway
-  // receives the browser request on the GUI's port and routes gRPC-Web service
-  // paths to the backend instead of making Next.js discover a separate URL.
+  // on every select change. The client uses same-origin routing: Next.js logs
+  // gRPC-Web calls on the server and relays them to the configured Envoy endpoint.
   const client = useMemo(() => createSignalStimClient(), [])
 
   const activeFaultBySensorId = useMemo(

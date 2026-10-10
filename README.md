@@ -4,7 +4,7 @@ A Next.js + TypeScript signal-stim interface for calling a server-hosted gRPC se
 
 ## Stack
 
-- Next.js renders the app and runs the local development server.
+- Next.js renders the app, runs the local development server, and logs and relays RPC requests.
 - React stores the selected fault variants and the current on-screen fault state.
 - MUI provides the table, buttons, selects, chips, panels, layout, theme, and icons.
 - Protocol Buffers define the service contract in `proto/controlpanel/v1/control_panel.proto`.
@@ -14,19 +14,20 @@ A Next.js + TypeScript signal-stim interface for calling a server-hosted gRPC se
 - Envoy Gateway receives the browser's normal GUI requests and gRPC-Web requests on the same external port.
 - Helm describes how the Next.js app, optional Envoy proxy, Services, and Envoy config are deployed to Kubernetes.
 
-The app uses the ConnectRPC TypeScript library, and the selected browser protocol is gRPC-Web. The browser does not fetch a separate API URL from Next.js. Instead, the ConnectRPC client uses the same origin that served the GUI. Envoy Gateway owns the routing decision: normal Next.js paths go to the GUI service, while `/controlpanel.v1.SignalStimService/*` paths go to the gRPC-Web/backend path.
+The app uses the ConnectRPC TypeScript library, and the selected browser protocol is gRPC-Web. The ConnectRPC client uses the same origin that served the GUI. Envoy Gateway routes both GUI and `/controlpanel.v1.SignalStimService/*` requests to Next.js. The server decodes and logs each RPC request, forwards it to the internal Envoy gRPC-Web endpoint, and logs its response before returning it to the browser.
 
 ## Run
 
 ```sh
 npm install
 npm run proto:gen
+cp .env.example .env.local
 npm run dev
 ```
 
 The Next.js app runs at `http://localhost:3000`.
 
-Direct local Next.js development shows the GUI. gRPC-Web calls require the app to be reached through an Envoy Gateway, ingress, or local reverse proxy that routes the service path to the gRPC-Web/backend endpoint.
+For local RPC calls, run or port-forward Envoy on `127.0.0.1:8080`, or set `SIGNAL_STIM_UPSTREAM_URL` in `.env.local` to another reachable gRPC-Web endpoint. The browser can call Next.js directly on port 3000; RPC request and response logs appear in the Next.js terminal.
 
 ## What The App Shows
 
@@ -58,11 +59,23 @@ That means the browser sends ConnectRPC requests to paths like:
 Envoy Gateway should route traffic by path:
 
 ```text
-/controlpanel.v1.SignalStimService/* -> gRPC-Web/backend route
-/*                                      -> Next.js GUI service
+/controlpanel.v1.SignalStimService/* -> Next.js RPC relay
+/*                                  -> Next.js GUI
+
+Next.js RPC relay -> internal Envoy -> native gRPC coordinator
 ```
 
-The browser should not receive Kubernetes service DNS names such as `control-panel-grpc.default.svc.cluster.local`. Those are internal cluster details and should stay in Envoy/Gateway configuration.
+The browser does not receive Kubernetes service DNS names such as `control-panel-grpc.default.svc.cluster.local`. The relay uses the server-only `SIGNAL_STIM_UPSTREAM_URL`; requests cannot select an arbitrary upstream. Routing RPCs directly to Envoy bypasses the app's request and response logging, so update any separately managed Gateway or ingress rules when adopting the relay.
+
+Server settings are read at runtime:
+
+| Environment variable | Helm value | Default |
+| --- | --- | --- |
+| `SIGNAL_STIM_UPSTREAM_URL` | `app.rpc.upstreamUrl` | Helm uses `http://<release-fullname>-envoy:<envoy.service.port>`; local `.env.example` uses `http://127.0.0.1:8080` |
+| `SIGNAL_STIM_TIMEOUT_MS` | `app.rpc.timeoutMs` | `30000` milliseconds |
+| `RPC_LOG_MAX_PAYLOAD_BYTES` | `app.rpc.logMaxPayloadBytes` | `65536` bytes per decoded log payload |
+
+The relay preserves caller cancellation and shorter deadlines, with a 30-second default maximum for an upstream call. Incoming RPC messages are limited to 1 MiB. The logging limit is separate: it only shortens the logged preview and does not alter the forwarded signals. Keep these settings server-side; they do not use `NEXT_PUBLIC_` variables.
 
 If you use the chart-managed Envoy proxy, configure the native gRPC server target in Helm values:
 
@@ -122,8 +135,8 @@ rules:
           type: PathPrefix
           value: /controlpanel.v1.SignalStimService/
     backendRefs:
-      - name: test-next-app-envoy
-        port: 8080
+      - name: test-next-app-app
+        port: 3000
   - matches:
       - path:
           type: PathPrefix
@@ -133,7 +146,7 @@ rules:
         port: 3000
 ```
 
-The important part is order and specificity: the gRPC-Web service prefix must route to the gRPC-Web/backend path, and the general `/` route should go to the Next.js app.
+Both rules target `test-next-app-app`. The app's server-side upstream URL points to `test-next-app-envoy:8080`, so the internal forwarding hop does not loop through the public Gateway.
 
 ## Local Kind
 
@@ -232,12 +245,48 @@ That build uses `build/Dockerfile.ubi-hardened` and is documented in `docs/conta
 4. The ConnectRPC client uses the browser's current origin as its gRPC-Web base URL.
 5. ConnectRPC sends a gRPC-Web request to `/controlpanel.v1.SignalStimService/...`.
 6. Envoy Gateway receives the request on the same host and port that served the GUI.
-7. Envoy Gateway routes the service path to the gRPC-Web/backend route instead of the Next.js app.
-8. Envoy's `grpc_web` filter translates the request for the native gRPC server when using the chart-managed Envoy proxy.
-9. Envoy forwards the request to the `native_grpc_server` upstream.
+7. Envoy Gateway routes the service path to the Next.js app's RPC relay.
+8. The relay assigns a request ID, logs the decoded request, and forwards the RPC to its configured internal gRPC-Web endpoint.
+9. Envoy's `grpc_web` filter translates the request and sends it to the native gRPC coordinator.
 10. The response comes back through Envoy as either `SignalsResponse` for set/remove or `ResponseStatus` for reset.
-11. For set/remove, the browser updates its local active fault display only when the response status is `STATUS_SUCCESS` and `signal_errors` is empty. Reset requires `STATUS_SUCCESS`.
-12. Failed commands leave the local fault display unchanged and keep `Reset faults` available, even if no complete fault is active, so the operator can clear signals after a partial batch or lost response.
+11. The relay logs the decoded response, duration, and application outcome, or logs a transport error, then returns the result to the browser. Authorization and the request ID are forwarded; headers and cookies are excluded from logs.
+12. For set/remove, the browser updates its local active fault display only when the response status is `STATUS_SUCCESS` and `signal_errors` is empty. Reset requires `STATUS_SUCCESS`.
+13. Failed commands leave the local fault display unchanged and keep `Reset faults` available, even if no complete fault is active, so the operator can clear signals after a partial batch or lost response.
+
+## RPC Container Logs
+
+`SetSignal`, `RemoveSignals`, and `ResetAll` produce structured JSON lines on the Next.js process's stdout. In Kubernetes, follow the app container:
+
+```sh
+kubectl logs deployment/test-next-app-app -c next-app --follow
+```
+
+Use your release name and namespace if different. With Docker, use:
+
+```sh
+docker logs --follow <app-container-name>
+```
+
+During `npm run dev:local`, the same records appear in the terminal. Each record includes a timestamp, level, event, request ID, service, and method. Match `request_id` across records to follow one operation even when calls overlap.
+
+| Event | Meaning |
+| --- | --- |
+| `rpc.received` | The relay received the HTTP request, including requests that cannot be decoded. |
+| `rpc.request` | The decoded protobuf request is ready to forward; `payload` contains every signal in the suite. |
+| `rpc.response` | The coordinator returned a decoded response; `duration_ms` and `application_status` describe the outcome. |
+| `rpc.error` | The call failed, including unavailable upstreams, timeouts, and cancellations; `error.code` and `error.message` identify the failure. |
+| `rpc.rejected` | The relay rejected the request before invoking the coordinator. |
+
+For example, injecting two signals produces request and response records like these; timestamps, IDs, and duration here are illustrative:
+
+```json
+{"timestamp":"2026-10-10T12:00:00.000Z","level":"info","event":"rpc.request","request_id":"example-request","service":"controlpanel.v1.SignalStimService","method":"SetSignal","payload":{"signals":[{"signalId":"3001","cardModel":"CARD_MODEL_TYPE2","discrete":false},{"signalId":"3002","cardModel":"CARD_MODEL_TYPE2","discrete":true}]}}
+{"timestamp":"2026-10-10T12:00:00.012Z","level":"info","event":"rpc.response","request_id":"example-request","service":"controlpanel.v1.SignalStimService","method":"SetSignal","duration_ms":12,"application_status":"success","payload":{"responseStatus":{"status":"STATUS_SUCCESS"},"signalErrors":[]}}
+```
+
+Payloads use ProtoJSON: 64-bit signal IDs are decimal strings, enums use their protobuf names, and default values such as `false` and `STATUS_SUCCESS` remain visible. A partial batch response is logged with `application_status: "failure"` and its returned `signalErrors`, even when `responseStatus.status` is `STATUS_SUCCESS`. A failed `ResetAll` status is also an application failure. HTTP 200 alone does not imply that a fault was applied or removed successfully.
+
+Payloads larger than `RPC_LOG_MAX_PAYLOAD_BYTES` use `payload_truncated: true`, `payload_bytes`, and `payload_preview` in place of the full `payload`. Increase the cap when full payloads for larger suites are required. Header values, cookies, and authorization credentials are not logged; configured signal values and backend error messages are logged for diagnosis. Container log collection and retention are managed by your Docker or Kubernetes logging setup.
 
 ## Service Contract
 
@@ -321,7 +370,8 @@ The external coordinator implements the actual fault detection/rollup rules. Its
 
 - `src/app` contains the Next.js app-router page, layout, MUI provider, and theme.
 - `src/features/faults` contains the sensor fault UI, model helpers, and fault-specific presentation components.
-- `src/rpc` contains the same-origin ConnectRPC transport/client setup.
+- `src/rpc` contains the same-origin ConnectRPC browser client.
+- `src/server` contains the RPC relay and structured container logging.
 - `src/gen` contains Buf-generated TypeScript from `proto/controlpanel/v1/control_panel.proto`.
 - `helm/test-next-app` contains the Helm deployment for the app and Envoy.
 - `build` contains Docker image build files.

@@ -29,15 +29,15 @@ spec:
     - name: {{ required "gateway.parentRefs[0].name is required unless gateway.createGateway=true" "" | quote }}
 {{- end }}
   rules:
-    # gRPC-Web requests use the generated service path. This rule must stay
-    # more specific than the general GUI route below.
+    # The app logs decoded RPC requests and responses before forwarding to
+    # the internal Envoy service. Routing directly to Envoy bypasses logging.
     - matches:
         - path:
             type: PathPrefix
             value: /controlpanel.v1.SignalStimService/
       backendRefs:
-        - name: {{ include "test-next-app.fullname" . }}-envoy
-          port: {{ .Values.envoy.service.port }}
+        - name: {{ include "test-next-app.fullname" . }}-app
+          port: {{ .Values.app.service.port }}
     # Everything else is the Next.js GUI: the page, static assets, and app
     # router paths.
     - matches:

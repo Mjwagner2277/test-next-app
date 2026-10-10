@@ -24,8 +24,8 @@ function resolveGrpcWebBaseUrl(baseUrl: string | undefined): string {
   const trimmedBaseUrl = baseUrl?.trim() ?? ''
 
   // Same-origin is the normal cluster path:
-  // browser -> Envoy Gateway -> app for page assets
-  // browser -> Envoy Gateway -> gRPC-Web route for service calls
+  // browser -> Envoy Gateway -> app for page assets and the logged RPC relay
+  // app -> internal Envoy -> native gRPC coordinator for service calls
   if (trimmedBaseUrl.length === 0 && typeof globalThis.location !== 'undefined') {
     return globalThis.location.origin
   }
@@ -38,8 +38,8 @@ export function createSignalStimClient({
   authToken,
 }: ClientOptions = {}): SignalStimClient {
   // ConnectRPC provides this gRPC-Web transport. The browser sends gRPC-Web to
-  // the same origin that served the GUI. Envoy Gateway owns routing those
-  // /controlpanel.v1.SignalStimService/* paths to the gRPC-Web endpoint.
+  // the same origin that served the GUI. The Next.js server logs decoded calls
+  // on /controlpanel.v1.SignalStimService/* and forwards them through Envoy.
   const transport = createGrpcWebTransport({
     baseUrl: resolveGrpcWebBaseUrl(baseUrl),
     interceptors: authToken

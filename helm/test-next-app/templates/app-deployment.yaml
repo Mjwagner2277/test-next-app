@@ -25,5 +25,12 @@ spec:
           ports:
             - name: http
               containerPort: 3000
+          env:
+            - name: SIGNAL_STIM_UPSTREAM_URL
+              value: {{ default (printf "http://%s-envoy:%v" (include "test-next-app.fullname" .) .Values.envoy.service.port) .Values.app.rpc.upstreamUrl | quote }}
+            - name: SIGNAL_STIM_TIMEOUT_MS
+              value: {{ .Values.app.rpc.timeoutMs | quote }}
+            - name: RPC_LOG_MAX_PAYLOAD_BYTES
+              value: {{ .Values.app.rpc.logMaxPayloadBytes | quote }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
