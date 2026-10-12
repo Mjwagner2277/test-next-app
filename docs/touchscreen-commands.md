@@ -5,7 +5,9 @@ Open `/commands` for the touchscreen screen. The fault console stays at `/`.
 `COMMAND_TABS` in `src/features/commands/commandConfig.ts` defines each tab and
 its buttons. `CommandConsole` maps that constant into `<Tab>` elements and
 `<TabPanel>` elements, then maps each tab's buttons inside its panel.
-`TabPanel` shows its children only when its ID matches the selected tab.
+Selection starts at numeric index `0` (the first tab). Each tab and panel uses
+the same array index; IDs are used for keys and accessibility links.
+`TabPanel` shows its children only when its index matches the selected index.
 
 Add a button with its command callback directly in the constant:
 
