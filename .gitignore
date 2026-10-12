@@ -24,3 +24,6 @@ tests/.build
 *.njsproj
 *.sln
 *.sw?
+
+# Runtime simulation state
+.data/

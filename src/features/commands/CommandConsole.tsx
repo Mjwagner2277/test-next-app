@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Box, Button, Tab, Tabs, Typography } from '@mui/material'
+import { Box, Tab, Tabs, Typography } from '@mui/material'
 import { COMMAND_TABS } from './commandConfig'
+import { CommandButton } from './CommandButton'
 import { TabPanel } from './TabPanel'
 
 export function CommandConsole() {
@@ -29,10 +30,7 @@ export function CommandConsole() {
             <Typography sx={{ color: '#a6bac9', mb: 3 }}>Select a command to run.</Typography>
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' }, gridAutoRows: '1fr', gap: 2 }}>
               {tab.buttons.map((button) => (
-                <Button key={button.id} variant="outlined" disabled={!button.onClick} onClick={button.onClick} sx={{ width: '100%', minWidth: 0, minHeight: 144, p: 3, display: 'flex', flexDirection: 'column', gap: 1, fontSize: 22, bgcolor: '#20303b', color: '#eef4f8', borderColor: '#4d6475', touchAction: 'manipulation', '&:hover': { bgcolor: '#2c4552', borderColor: '#77e7d6' }, '&:active': { bgcolor: '#315a63' }, '&.Mui-focusVisible': { outline: '3px solid #77e7d6', outlineOffset: 3 }, '&.Mui-disabled': { color: '#99aab7', borderColor: '#3c4c59' } }}>
-                  <span>{button.label}</span>
-                  {button.description && <Typography component="span" sx={{ fontSize: 16, color: 'inherit' }}>{button.description}</Typography>}
-                </Button>
+                <CommandButton key={button.id} button={button} />
               ))}
             </Box>
           </TabPanel>
