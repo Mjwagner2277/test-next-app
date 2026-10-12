@@ -11,6 +11,7 @@ node_modules
 .next
 dist
 dist-ssr
+tests/.build
 *.local
 
 # Editor directories and files

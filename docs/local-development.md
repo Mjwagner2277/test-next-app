@@ -27,6 +27,7 @@ npm run proto:gen
 ## Validate The App
 
 ```sh
+npm test
 npm run lint
 npm run build
 ```

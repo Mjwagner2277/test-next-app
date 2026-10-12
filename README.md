@@ -236,8 +236,8 @@ That build uses `build/Dockerfile.ubi-hardened` and is documented in `docs/conta
 8. Envoy's `grpc_web` filter translates the request for the native gRPC server when using the chart-managed Envoy proxy.
 9. Envoy forwards the request to the `native_grpc_server` upstream.
 10. The response comes back through Envoy as either `SignalsResponse` for set/remove or `ResponseStatus` for reset.
-11. If the response status is `STATUS_SUCCESS`, the browser updates its local active fault display. If the status is `STATUS_FAILURE`, the display is left unchanged.
-12. `SignalsResponse.signal_errors` is generated and available to the browser for set/remove responses, but the current UI intentionally ignores it.
+11. For set/remove, the browser updates its local active fault display only when the response status is `STATUS_SUCCESS` and `signal_errors` is empty. Reset requires `STATUS_SUCCESS`.
+12. Failed commands leave the local fault display unchanged and keep `Reset faults` available, even if no complete fault is active, so the operator can clear signals after a partial batch or lost response.
 
 ## Service Contract
 
@@ -251,13 +251,71 @@ npm run proto:gen
 
 The UI expects the backend to implement `controlpanel.v1.SignalStimService`:
 
-- `SetSignal` sends a `SignalsRequest` with one mapped `Signal`.
-- `RemoveSignals` sends a `SignalsRequest` with one mapped `Signal`.
+- `SetSignal` sends one `SignalsRequest` containing all signals mapped to the selected fault variant.
+- `RemoveSignals` sends one `SignalsRequest` containing all signals mapped to the active fault variant.
 - `ResetAll` accepts an empty `Empty` request, clears all injected signals, and returns `ResponseStatus` directly.
 
-The UI still shows friendly variants such as `High`, `Low`, `Open`, or `Engaged`. `src/features/faults/faultModel.ts` maps those choices to generated `Signal` fields such as `signalId`, `cardModel`, and the `signalValue` oneof.
+The UI still shows friendly variants such as `High`, `Low`, `Open`, `Engaged`, or `Unknown`. `src/features/faults/faultModel.ts` maps each choice to a nonempty list of signals. Each member has its own `signalId`, `cardModel`, and `signalValue` oneof. A suite remains one active fault, regardless of how many signals it sends. Existing single-signal rows use one-element lists.
 
-`SetSignal` and `RemoveSignals` return `SignalsResponse`, which contains a nested `ResponseStatus` message named `response_status` and repeated `SignalError` entries named `signal_errors`. `ResetAll` returns `ResponseStatus` directly. The UI currently treats only `Status.STATUS_SUCCESS` as successful and ignores the error list until the display needs richer failure details.
+`SetSignal` and `RemoveSignals` return `SignalsResponse`, which contains a nested `ResponseStatus` message named `response_status` and repeated `SignalError` entries named `signal_errors`. `ResetAll` returns `ResponseStatus` directly. Any per-signal error makes the whole fault command unsuccessful, including when the top-level status is success.
+
+### Configuring a multi-signal fault
+
+Fault classes define the choices available in a row's dropdown. The row defines the signals to send for each choice. A class does not send signals itself, and it does not require one physical sensor per row. Several named faults can share the `state` class while each configures its own three or four signals for `unknown`.
+
+For a fault named **XXXX state unknown**, the mapping is:
+
+| Field | Meaning | Example |
+| --- | --- | --- |
+| `name` | The user-facing fault target | `XXXX state unknown` |
+| `faultClassId` | Which set of dropdown choices the row uses | `state` |
+| `defaultVariant` | The initially selected choice | `unknown` |
+| `signalMapping.unknown` | All signals sent together for that choice | A list of four signal payloads |
+
+The `state` class supplies a single `Unknown` choice, so this fault needs only an `unknown` mapping. Choosing Inject sends all four signals in one request and records one active fault. Remove sends the same four signals in one removal request. No additional UI components are needed.
+
+Use a row like this in `SENSOR_ROWS` after replacing the illustrative IDs and values with the combination that produces Unknown in your coordinator:
+
+```ts
+const unknownStateFault: SensorRow = {
+  id: 'xxxx-state-unknown',
+  name: 'XXXX state unknown',
+  location: 'Subsystem XXXX',
+  liveReading: 'Known',
+  faultClassId: 'state',
+  defaultVariant: 'unknown',
+  signalMapping: {
+    unknown: [
+      {
+        signalId: 3001n,
+        cardModel: CardModel.TYPE2,
+        signalValue: { case: 'discrete', value: false },
+      },
+      {
+        signalId: 3002n,
+        cardModel: CardModel.TYPE2,
+        signalValue: { case: 'discrete', value: false },
+      },
+      {
+        signalId: 3003n,
+        cardModel: CardModel.TYPE2,
+        signalValue: { case: 'discrete', value: true },
+      },
+      {
+        signalId: 3004n,
+        cardModel: CardModel.TYPE2,
+        signalValue: { case: 'discrete', value: false },
+      },
+    ],
+  },
+}
+```
+
+The word `unknown` is a UI/configuration key; only the four signal payloads are sent to the coordinator. The example values do not automatically guarantee an Unknown state: configure the actual combination your fault-detection rules expect. Remove one entry for a three-signal fault, or append entries for a larger suite. Each row and variant may use different signal IDs, card models, and value types.
+
+To introduce another dropdown choice, such as `Conflict`, add it to an appropriate entry in `FAULT_CLASSES`, then supply a signal list under that variant's ID for every row using the class. The model rejects missing variants, empty lists, and duplicate `(cardModel, signalId)` identities within a variant before sending a request. Signal IDs remain `bigint` to preserve the protobuf's `uint64` range.
+
+The external coordinator implements the actual fault detection/rollup rules. Its server implementation is not in this repository. The existing repeated-signal RPC needs no schema change, but batching alone does not guarantee atomic application or removal. The coordinator must handle the full list and report failures; if it can apply only part of a batch, the operator can use `Reset faults` to clear all injected signals. Until the coordinator provides shared-signal ownership, avoid overlapping signal identities across rows that can be active together.
 
 ## App Structure
 

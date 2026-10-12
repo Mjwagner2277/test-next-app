@@ -17,7 +17,7 @@ import {
   getFaultVariantLabel,
   isResponseStatusSuccessful,
   isSignalsResponseSuccessful,
-  toSignal,
+  toSignals,
   upsertActiveFault,
   type FaultVariantId,
   type RpcRunOptions,
@@ -45,6 +45,10 @@ export function ControlPanelConsole() {
   // SUCCESS/FAILURE, so this page cannot rehydrate active faults from the
   // coordinator after a reload.
   const [activeFaults, setActiveFaults] = useState(INITIAL_ACTIVE_FAULTS)
+
+  // A failed batch or lost response can leave signals applied even when no
+  // complete fault was accepted. Keep the existing Reset action available.
+  const [faultStateUncertain, setFaultStateUncertain] = useState(false)
 
   // pendingAction disables command buttons while a request is in flight and
   // gives the operator immediate feedback that a gRPC-Web call is underway.
@@ -98,16 +102,21 @@ export function ControlPanelConsole() {
       if (commandSucceeded) {
         onSuccess?.()
       } else {
+        setFaultStateUncertain(true)
         setCommandFailure({
           action: name,
           detail:
-            'The coordinator returned a failure status. Local fault state was not changed.',
+            'The coordinator did not accept the full command. Local fault state was not changed. Use Reset faults to clear any signals that may have been applied.',
         })
       }
     } catch (error) {
       const detail = describeRpcError(error)
 
-      setCommandFailure({ action: name, detail })
+      setFaultStateUncertain(true)
+      setCommandFailure({
+        action: name,
+        detail: `${detail}. Use Reset faults to clear any signals that may have been applied.`,
+      })
       globalThis.console.warn(`${name} failed: ${detail}`)
     } finally {
       setPendingAction(null)
@@ -126,7 +135,7 @@ export function ControlPanelConsole() {
       name: `Inject ${sensor.name} ${variantLabel}`,
       call: () =>
         requireClient().setSignal({
-          signals: [toSignal(sensor, variant)],
+          signals: toSignals(sensor, variant),
         }),
       isSuccessful: isSignalsResponseSuccessful,
       onSuccess: () => {
@@ -151,7 +160,7 @@ export function ControlPanelConsole() {
       name: `Clear ${sensor.name}`,
       call: () =>
         requireClient().removeSignals({
-          signals: [toSignal(sensor, activeVariant)],
+          signals: toSignals(sensor, activeVariant),
         }),
       isSuccessful: isSignalsResponseSuccessful,
       onSuccess: () => {
@@ -167,7 +176,10 @@ export function ControlPanelConsole() {
       name: 'Reset faults',
       call: () => requireClient().resetAll({}),
       isSuccessful: isResponseStatusSuccessful,
-      onSuccess: () => setActiveFaults([]),
+      onSuccess: () => {
+        setActiveFaults([])
+        setFaultStateUncertain(false)
+      },
     })
   }
 
@@ -199,7 +211,7 @@ export function ControlPanelConsole() {
         >
           <FaultConsoleHeader
             faultCount={faultCount}
-            canResetFaults={canCall && faultCount > 0}
+            canResetFaults={canCall && (faultCount > 0 || faultStateUncertain)}
             isBusy={pendingAction !== null}
             onResetFaults={resetFaults}
             onResetSystem={resetSystem}
