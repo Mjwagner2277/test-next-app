@@ -1,12 +1,75 @@
 'use client'
 
-import { useState } from 'react'
-import { Box, Button, Tab, Tabs, Typography } from '@mui/material'
-import { COMMAND_TABS } from './commandConfig'
+import { useEffect, useRef, useState } from 'react'
+import { Alert, Box, Button, Tab, Tabs, Typography } from '@mui/material'
+import type { SimulationState } from '../simulation/simulationState'
+import { COMMAND_TABS, INITIAL_COMPONENT_STATE } from './commandConfig'
+import { CommandButton } from './CommandButton'
+import { runStateSequence } from './runStateSequence'
 import { TabPanel } from './TabPanel'
 
 export function CommandConsole() {
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [componentState, setComponentState] = useState<SimulationState>({ ...INITIAL_COMPONENT_STATE })
+  const [ready, setReady] = useState(false)
+  const [loadAttempt, setLoadAttempt] = useState(0)
+  const [pendingId, setPendingId] = useState<string | null>(null)
+  const [result, setResult] = useState<{ error: boolean; message: string } | null>(null)
+  const inFlight = useRef(false)
+  const sequenceController = useRef<AbortController | null>(null)
+  useEffect(() => () => sequenceController.current?.abort(), [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    setResult(null)
+    async function loadState() {
+      try {
+        const response = await fetch('/api/simulation/state', { cache: 'no-store', signal: controller.signal })
+        if (!response.ok) throw new Error('Unable to load simulation state.')
+        const saved: SimulationState = await response.json()
+        if (!controller.signal.aborted) {
+          setComponentState({ ...INITIAL_COMPONENT_STATE, ...saved })
+          setReady(true)
+        }
+      } catch {
+        if (!controller.signal.aborted) setResult({ error: true, message: 'Unable to load simulation state. Retry before sending commands.' })
+      }
+    }
+    void loadState()
+    return () => controller.abort()
+  }, [loadAttempt])
+
+  async function updateState(updates: Map<SimulationState, number>, buttonId: string) {
+    if (!ready || inFlight.current) return
+    inFlight.current = true
+    const controller = new AbortController()
+    sequenceController.current = controller
+    setPendingId(buttonId)
+    setResult(null)
+    try {
+      await runStateSequence(componentState, updates, {
+        signal: controller.signal,
+        send: async (nextState, signal) => {
+          const response = await fetch('/api/simulation/state', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nextState),
+            signal,
+          })
+          if (!response.ok) throw new Error('The server could not save this state update. Remaining steps were stopped.')
+          return response.json() as Promise<SimulationState>
+        },
+        onSaved: setComponentState,
+      })
+      setResult({ error: false, message: 'Simulation sequence completed.' })
+    } catch (error) {
+      if (!controller.signal.aborted) setResult({ error: true, message: error instanceof Error ? error.message : 'Unable to update simulation state. Remaining steps were stopped.' })
+    } finally {
+      inFlight.current = false
+      sequenceController.current = null
+      if (!controller.signal.aborted) setPendingId(null)
+    }
+  }
   return (
     <Box component="main" sx={{ minHeight: '100svh', bgcolor: '#0f151c', color: '#eef4f8', p: { xs: 1, md: 3 } }}>
       <Box component="header" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: 3 }}>
@@ -14,6 +77,11 @@ export function CommandConsole() {
           <Typography sx={{ color: '#91a5b6', mb: 0.5 }}>Operator console</Typography>
           <Typography component="h1" sx={{ fontSize: { xs: 26, md: 36 }, fontWeight: 800 }}>Commands</Typography>
         </Box>
+      </Box>
+      <Box aria-live="polite" sx={{ mb: 2 }}>
+        {!ready && !result && <Typography>Loading simulation state…</Typography>}
+        {result && <Alert severity={result.error ? 'error' : 'success'}>{result.message}</Alert>}
+        {!ready && result?.error && <Button onClick={() => setLoadAttempt((attempt) => attempt + 1)}>Retry loading state</Button>}
       </Box>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '100px minmax(0, 1fr)', sm: '180px minmax(0, 1fr)', lg: '224px minmax(0, 1fr)' }, minHeight: 'calc(100svh - 150px)', border: '1px solid #33404d', borderRadius: 2, overflow: 'hidden' }}>
         <Box component="nav" aria-label="Command groups" sx={{ bgcolor: '#141f29', borderRight: '1px solid #33404d', py: 2 }}>
@@ -29,10 +97,7 @@ export function CommandConsole() {
             <Typography sx={{ color: '#a6bac9', mb: 3 }}>Select a command to run.</Typography>
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' }, gridAutoRows: '1fr', gap: 2 }}>
               {tab.buttons.map((button) => (
-                <Button key={button.id} variant="outlined" disabled={!button.onClick} onClick={button.onClick} sx={{ width: '100%', minWidth: 0, minHeight: 144, p: 3, display: 'flex', flexDirection: 'column', gap: 1, fontSize: 22, bgcolor: '#20303b', color: '#eef4f8', borderColor: '#4d6475', touchAction: 'manipulation', '&:hover': { bgcolor: '#2c4552', borderColor: '#77e7d6' }, '&:active': { bgcolor: '#315a63' }, '&.Mui-focusVisible': { outline: '3px solid #77e7d6', outlineOffset: 3 }, '&.Mui-disabled': { color: '#99aab7', borderColor: '#3c4c59' } }}>
-                  <span>{button.label}</span>
-                  {button.description && <Typography component="span" sx={{ fontSize: 16, color: 'inherit' }}>{button.description}</Typography>}
-                </Button>
+                <CommandButton key={button.id} button={button} disabled={!ready || pendingId !== null} pending={pendingId === button.id} onStateUpdate={updateState} />
               ))}
             </Box>
           </TabPanel>

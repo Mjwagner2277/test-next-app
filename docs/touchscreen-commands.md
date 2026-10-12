@@ -1,24 +1,111 @@
-# Touchscreen commands
+# Touchscreen commands and shared simulation state
 
-Open `/commands` for the touchscreen screen. The fault console stays at `/`.
+Open `/commands` for the touchscreen and `/simulation` in another browser or
+page to see the shared state. The viewer refreshes once per second. The fault
+console stays at `/`; these simulation values do not send fault RPCs.
 
-`COMMAND_TABS` in `src/features/commands/commandConfig.ts` defines each tab and
-its buttons. `CommandConsole` maps that constant into `<Tab>` elements and
-`<TabPanel>` elements, then maps each tab's buttons inside its panel.
-Selection starts at numeric index `0` (the first tab). Each tab and panel uses
-the same array index; IDs are used for keys and accessibility links.
-`TabPanel` shows its children only when its index matches the selected index.
+`COMMAND_TABS` in `src/features/commands/commandConfig.ts` defines tabs and buttons.
+The console maps it into tabs and matching `TabPanel` components. Selection starts
+at numeric index `0`; IDs provide keys and accessibility links. Each panel maps
+its buttons to the separate `CommandButton.tsx` component.
 
-Add a button with its command callback directly in the constant:
+`CommandConsole` owns one shared React `componentState` object for all tabs.
+It starts with `INITIAL_COMPONENT_STATE` and loads saved server values before
+commands are enabled. Configure defaults in `commandConfig.ts`.
+
+Each button passes its field changes to the console's common handler. The handler
+builds the next state object from the latest acknowledged state and field changes,
+then sends that complete object in the PATCH request.
+Commands are disabled while saving to avoid overlapping updates. On success the
+server response becomes the shared state; on failure the last acknowledged state
+is retained. The state survives switching tabs. Multiple browser operators sending full
+objects use last-write-wins semantics for overlapping fields.
+
+Configure a unique `Map<SimulationState, number>` for each button. Each key is an
+object containing fields to change, and its value is the offset in milliseconds:
 
 ```ts
-{ id: 'a-5', label: 'New command', onClick: () => runCommand() }
+{
+  id: 'move-x',
+  label: 'Move X',
+  stateUpdate: new Map<SimulationState, number>([
+    [{ mechanical_component_x: true, mechanical_component_position: 0 }, 0],
+    [{ mechanical_component_position: 50 }, 1500],
+    [{ mechanical_component_x: false, mechanical_component_position: 100 }, 3000],
+  ]),
+}
 ```
 
-Import your command function in the configuration file. Handle any asynchronous
-progress or errors in that function as needed. Sample buttons have no callbacks
-and are disabled until connected.
+The console passes the map to its timed update handler, which sorts by offset,
+merges each key object's fields into the accumulated shared state, and sends the
+full resulting object to the API. The map itself is never JSON-serialized.
+Use one entry at offset `0` for an immediate update. Use a distinct object key
+for each step: setting the same object key again replaces its map entry.
 
-To add a tab, append an object with a unique `id`, `label`, and `buttons` array.
-Give each button a unique `id`, a `label`, and optionally a `description` and
-`onClick` callback. Both the tab and its panel render from the same constant.
+Values can be booleans, finite numbers, or strings (up to 1024 characters).
+Names start with a letter and contain letters, numbers, or underscores, up to
+128 characters. Reserved prototype names are rejected. Send 1–100 fields per
+update. Arrays, nested objects, and null are not accepted; multiple components
+are represented by multiple entries in the object. Buttons without an update
+are disabled. A request failure is shown on the button and can be retried.
+
+`PATCH /api/simulation/state` accepts that object and returns the complete merged
+state. Updates are applied together, preserving omitted fields (including false
+and zero values). Invalid requests return 400 without changing state; storage
+failures return 500. `GET /api/simulation/state` returns the current object, or
+`{}` before the first update. Both responses disable caching.
+
+Other pages can fetch it directly:
+
+```ts
+const response = await fetch('/api/simulation/state', { cache: 'no-store' })
+if (!response.ok) throw new Error('Unable to load simulation state')
+const state = await response.json()
+```
+
+State is stored in `.data/simulation-state.json`, or the path specified by
+`SIMULATION_STATE_FILE`. Writes are serialized within one Node process and
+replace the file atomically. State survives process restarts on the same disk.
+The Docker image prepares `/app/.data` for its non-root user; mount a persistent
+volume there, writable by UID 1001, to survive container replacement. Run one
+app process/replica with this file backend. Multi-replica or serverless deployments
+need a shared database instead. Keep this simulator within the same trusted
+access boundary as the existing app; the API does not add authentication.
+
+## Frontend Zustand store
+
+The `/simulation` page mounts `useSimulationPolling()`, which refreshes immediately
+and then one second after each request completes. Each successful response replaces
+`useSimulationStore.componentState`; errors keep the last successful values and
+set `error`. Unmounting aborts the request and cancels the next refresh.
+
+Other client components subscribe to the same store without creating another poll:
+
+```tsx
+import { useSimulationStore } from '@/features/simulation/useSimulationStore'
+
+const enabled = useSimulationStore((store) => store.componentState?.mechanical_component_x)
+const error = useSimulationStore((store) => store.error)
+```
+
+Mount `useSimulationPolling()` once in the consuming page or shared layout. The
+store is shared by components within that browser app instance; the server API
+remains the shared source across browsers. The command console still owns its
+editable state object so polling does not overwrite a pending button update.
+
+## Timing and polling
+
+Offsets are nonnegative integer milliseconds from the start of the sequence.
+Map insertion order need not match timing order; equal offsets run in insertion
+order. Put fields in one key object when they must change together. Requests run
+sequentially; a slow request delays overdue steps instead of allowing them to
+arrive out of order.
+
+All buttons remain disabled until the sequence finishes. A failed request stops
+remaining steps and retains acknowledged state. Leaving the commands page cancels
+pending waits and requests; an update already received by the server may still
+apply. Browser timers may be delayed in background tabs. This is not a durable
+server scheduler, and no interpolation occurs between steps.
+
+The existing frontend poll reads each saved snapshot into the Zustand store.
+It polls once per second, so shorter intermediate states may not be observed.
