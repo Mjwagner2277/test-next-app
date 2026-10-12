@@ -1,37 +1,19 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { Alert, Box, Typography } from '@mui/material'
-import type { SimulationState } from '@/features/simulation/simulationState'
+import { useSimulationStore } from '@/features/simulation/useSimulationStore'
+import { useSimulationPolling } from '@/features/simulation/useSimulationPolling'
 
 export default function SimulationPage() {
-  const [state, setState] = useState<SimulationState | null>(null)
-  const [error, setError] = useState(false)
-
-  useEffect(() => {
-    const controller = new AbortController()
-    let timer: ReturnType<typeof setTimeout>
-    async function refresh() {
-      try {
-        const response = await fetch('/api/simulation/state', { cache: 'no-store', signal: controller.signal })
-        if (!response.ok) throw new Error('Unable to read state')
-        const next: SimulationState = await response.json()
-        if (!controller.signal.aborted) { setState(next); setError(false) }
-      } catch {
-        if (!controller.signal.aborted) setError(true)
-      } finally {
-        if (!controller.signal.aborted) timer = setTimeout(refresh, 1000)
-      }
-    }
-    void refresh()
-    return () => { controller.abort(); clearTimeout(timer) }
-  }, [])
+  useSimulationPolling()
+  const state = useSimulationStore((store) => store.componentState)
+  const error = useSimulationStore((store) => store.error)
 
   return (
     <Box component="main" sx={{ p: 3 }}>
       <Typography component="h1" variant="h4">Simulation state</Typography>
       <Typography>Updates from the command screen appear here automatically.</Typography>
-      {error && <Alert severity="error">Unable to refresh state. Any values shown may be out of date. Retrying…</Alert>}
+      {error && <Alert severity="error">{error}</Alert>}
       {state === null ? <Typography>Loading state…</Typography> : Object.keys(state).length === 0 ? (
         <Typography>No component values have been set yet.</Typography>
       ) : (

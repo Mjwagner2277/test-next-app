@@ -65,3 +65,24 @@ volume there, writable by UID 1001, to survive container replacement. Run one
 app process/replica with this file backend. Multi-replica or serverless deployments
 need a shared database instead. Keep this simulator within the same trusted
 access boundary as the existing app; the API does not add authentication.
+
+## Frontend Zustand store
+
+The `/simulation` page mounts `useSimulationPolling()`, which refreshes immediately
+and then one second after each request completes. Each successful response replaces
+`useSimulationStore.componentState`; errors keep the last successful values and
+set `error`. Unmounting aborts the request and cancels the next refresh.
+
+Other client components subscribe to the same store without creating another poll:
+
+```tsx
+import { useSimulationStore } from '@/features/simulation/useSimulationStore'
+
+const enabled = useSimulationStore((store) => store.componentState?.mechanical_component_x)
+const error = useSimulationStore((store) => store.error)
+```
+
+Mount `useSimulationPolling()` once in the consuming page or shared layout. The
+store is shared by components within that browser app instance; the server API
+remains the shared source across browsers. The command console still owns its
+editable state object so polling does not overwrite a pending button update.
