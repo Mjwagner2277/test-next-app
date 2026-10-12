@@ -9,7 +9,19 @@ The console maps it into tabs and matching `TabPanel` components. Selection star
 at numeric index `0`; IDs provide keys and accessibility links. Each panel maps
 its buttons to the separate `CommandButton.tsx` component.
 
-Configure a button with one or several component values:
+`CommandConsole` owns one shared React `componentState` object for all tabs.
+It starts with `INITIAL_COMPONENT_STATE` and loads saved server values before
+commands are enabled. Configure defaults in `commandConfig.ts`.
+
+Each button passes its field changes to the console's common handler. The handler
+builds `nextState = { ...componentState, ...changes }`, updates React state, and
+sends that complete object (not the old React state) in the PATCH request.
+Commands are disabled while saving to avoid overlapping updates. On failure the
+local change is rolled back; on success the server response becomes the shared
+state. The state survives switching tabs. Multiple browser operators sending full
+objects use last-write-wins semantics for overlapping fields.
+
+Configure a button with one or several fields to change:
 
 ```ts
 {

@@ -13,7 +13,15 @@ export type CommandTabDefinition = {
   buttons: readonly CommandButtonDefinition[]
 }
 
-// Add tabs and buttons here. Set stateUpdate to define the component values sent by a button.
+// Defaults for the shared state object. Saved server values override these on load.
+export const INITIAL_COMPONENT_STATE: SimulationState = {
+  mechanical_component_x: false,
+  mechanical_component_y: false,
+  mechanical_component_z: 'unknown',
+  mechanical_component_position: 0,
+}
+
+// Each button changes these fields on the shared object before the object is sent.
 export const COMMAND_TABS: readonly CommandTabDefinition[] = [
   {
     id: 'tab-a',
