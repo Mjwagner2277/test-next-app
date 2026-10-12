@@ -1,34 +1,22 @@
 # Touchscreen commands
 
-Open `/commands` for the standalone command screen. The fault console stays at `/`.
+Open `/commands` for the touchscreen screen. The fault console stays at `/`.
 
-Edit `src/features/commands/commandConfig.ts` to define tabs, buttons, and handlers.
-Each tab has a unique `id`, a `label`, and a `buttons` array. Each button has a
-unique `id`, a `label`, an optional `description`, and a `commandId`.
+`COMMAND_TABS` in `src/features/commands/commandConfig.ts` defines each tab and
+its buttons. `CommandConsole` maps that constant into `<Tab>` elements and
+`<TabPanel>` elements, then maps each tab's buttons inside its panel.
+`TabPanel` shows its children only when its ID matches the selected tab.
 
-Add a button to either tab:
-
-```ts
-{ id: 'a-5', label: 'New command', commandId: 'newCommand' }
-```
-
-Register its handler under the same command ID in `COMMAND_HANDLERS`:
+Add a button with its command callback directly in the constant:
 
 ```ts
-newCommand: async () => {
-  const response = await client.newCommand({ /* protobuf request fields */ })
-  if (!isSuccessful(response)) throw new Error('Command rejected')
-}
+{ id: 'a-5', label: 'New command', onClick: () => runCommand() }
 ```
 
-Import or create the appropriate protobuf client when that API is provided.
-Resolve only on success; throw on application failure. Transport errors are
-automatically caught by the screen. Parameters can be captured by the handler.
-No RPCs are attached to the sample buttons. Unmapped buttons show “Not connected”
-and report that status when tapped without making a request.
+Import your command function in the configuration file. Handle any asynchronous
+progress or errors in that function as needed. Sample buttons have no callbacks
+and are disabled until connected.
 
-Copy a tab definition to add more tabs. The screen renders the configuration
-automatically. Buttons use a responsive grid with 144px minimum height; tabs use
-88px minimum height. Keyboard navigation and visible focus are supported.
-During a command, all command buttons are disabled and rapid double taps are
-blocked. Success is shown only after the handler resolves.
+To add a tab, append an object with a unique `id`, `label`, and `buttons` array.
+Give each button a unique `id`, a `label`, and optionally a `description` and
+`onClick` callback. Both the tab and its panel render from the same constant.
