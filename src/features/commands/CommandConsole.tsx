@@ -5,7 +5,7 @@ import { Alert, Box, Button, Tab, Tabs, Typography } from '@mui/material'
 import type { SimulationState } from '../simulation/simulationState'
 import { COMMAND_TABS, INITIAL_COMPONENT_STATE } from './commandConfig'
 import { CommandButton } from './CommandButton'
-import { runStateSequence, type StateStep } from './runStateSequence'
+import { runStateSequence } from './runStateSequence'
 import { TabPanel } from './TabPanel'
 
 export function CommandConsole() {
@@ -39,7 +39,7 @@ export function CommandConsole() {
     return () => controller.abort()
   }, [loadAttempt])
 
-  async function updateState(steps: readonly StateStep[], buttonId: string) {
+  async function updateState(updates: Map<SimulationState, number>, buttonId: string) {
     if (!ready || inFlight.current) return
     inFlight.current = true
     const controller = new AbortController()
@@ -47,7 +47,7 @@ export function CommandConsole() {
     setPendingId(buttonId)
     setResult(null)
     try {
-      await runStateSequence(componentState, steps, {
+      await runStateSequence(componentState, updates, {
         signal: controller.signal,
         send: async (nextState, signal) => {
           const response = await fetch('/api/simulation/state', {

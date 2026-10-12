@@ -1,16 +1,17 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import type { SimulationState } from '../src/features/simulation/simulationState'
 import { runStateSequence } from '../src/features/commands/runStateSequence'
 
 test('offsets are relative to sequence start and each step sends cumulative state', async () => {
   let time = 0
   const starts: number[] = []
   const payloads: unknown[] = []
-  const result = await runStateSequence({ x: false, position: 0, untouched: 'ok' }, [
-    { offsetMs: 0, stateUpdate: { x: true } },
-    { offsetMs: 1000, stateUpdate: { position: 50 } },
-    { offsetMs: 2000, stateUpdate: { x: false, position: 100 } },
-  ], {
+  const result = await runStateSequence({ x: false, position: 0, untouched: 'ok' }, new Map<SimulationState, number>([
+    [{ x: false, position: 100 }, 2000],
+    [{ x: true }, 0],
+    [{ position: 50 }, 1000],
+  ]), {
     signal: new AbortController().signal,
     now: () => time,
     wait: async (ms) => { time += ms },
@@ -26,9 +27,9 @@ test('invalid sequences send nothing; failures and cancellation stop remaining s
   let sends = 0
   const controller = new AbortController()
   const options = { signal: controller.signal, send: async (state: Record<string, boolean | number | string>) => { sends++; return state }, onSaved: () => {} }
-  await assert.rejects(runStateSequence({}, [{ offsetMs: 0, stateUpdate: { x: true } }, { offsetMs: -1, stateUpdate: { x: false } }], options))
+  await assert.rejects(runStateSequence({}, new Map<SimulationState, number>([[{ x: true }, 0], [{ x: false }, -1]]), options))
   assert.equal(sends, 0)
-  const steps = [{ offsetMs: 0, stateUpdate: { x: true } }, { offsetMs: 0, stateUpdate: { x: false } }]
+  const steps = new Map<SimulationState, number>([[{ x: true }, 0], [{ x: false }, 0]])
   await assert.rejects(runStateSequence({}, steps, { ...options, send: async () => { sends++; throw new Error('failed') } }))
   assert.equal(sends, 1)
   await assert.rejects(runStateSequence({}, steps, { ...options, onSaved: () => controller.abort() }))

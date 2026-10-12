@@ -21,20 +21,26 @@ server response becomes the shared state; on failure the last acknowledged state
 is retained. The state survives switching tabs. Multiple browser operators sending full
 objects use last-write-wins semantics for overlapping fields.
 
-Configure a button with one or several fields to change:
+Configure a unique `Map<SimulationState, number>` for each button. Each key is an
+object containing fields to change, and its value is the offset in milliseconds:
 
 ```ts
 {
-  id: 'conflict',
-  label: 'Simulate Conflict',
-  stateUpdate: {
-    mechanical_component_x: false,
-    mechanical_component_y: true,
-    mechanical_component_z: 'unknown',
-    mechanical_component_position: 42,
-  },
+  id: 'move-x',
+  label: 'Move X',
+  stateUpdate: new Map<SimulationState, number>([
+    [{ mechanical_component_x: true, mechanical_component_position: 0 }, 0],
+    [{ mechanical_component_position: 50 }, 1500],
+    [{ mechanical_component_x: false, mechanical_component_position: 100 }, 3000],
+  ]),
 }
 ```
+
+The console passes the map to its timed update handler, which sorts by offset,
+merges each key object's fields into the accumulated shared state, and sends the
+full resulting object to the API. The map itself is never JSON-serialized.
+Use one entry at offset `0` for an immediate update. Use a distinct object key
+for each step: setting the same object key again replaces its map entry.
 
 Values can be booleans, finite numbers, or strings (up to 1024 characters).
 Names start with a letter and contain letters, numbers, or underscores, up to
@@ -87,34 +93,19 @@ store is shared by components within that browser app instance; the server API
 remains the shared source across browsers. The command console still owns its
 editable state object so polling does not overwrite a pending button update.
 
-## Timed movement sequences
+## Timing and polling
 
-Use `sequence` instead of `stateUpdate` to send several states from one button:
-
-```ts
-{
-  id: 'move-x',
-  label: 'Move X',
-  sequence: [
-    { offsetMs: 0, stateUpdate: { mechanical_component_x: true, mechanical_component_position: 0 } },
-    { offsetMs: 1500, stateUpdate: { mechanical_component_position: 50 } },
-    { offsetMs: 3000, stateUpdate: { mechanical_component_x: false, mechanical_component_position: 100 } },
-  ],
-}
-```
-
-Offsets are integer milliseconds from the start of the sequence, in ascending
-order. Each step merges its fields into the latest acknowledged state object and
-sends the whole object. Requests run sequentially; a slow request delays overdue
-steps instead of allowing them to arrive out of order. Equal offsets run in listed
-order. Put fields in one step when they must change together. Existing
-`stateUpdate` buttons remain a single immediate step; `sequence` takes precedence
-if both are configured.
+Offsets are nonnegative integer milliseconds from the start of the sequence.
+Map insertion order need not match timing order; equal offsets run in insertion
+order. Put fields in one key object when they must change together. Requests run
+sequentially; a slow request delays overdue steps instead of allowing them to
+arrive out of order.
 
 All buttons remain disabled until the sequence finishes. A failed request stops
-the remaining steps and retains already acknowledged state. Leaving the commands
-page cancels pending waits and requests; an update already received by the server
-may still apply. Timing runs in the browser and can be delayed in background tabs;
-this is not a real-time or durable server scheduler. The Zustand viewer polls once
-per second, so short intermediate states may not be observed. No interpolation is
-performed between steps.
+remaining steps and retains acknowledged state. Leaving the commands page cancels
+pending waits and requests; an update already received by the server may still
+apply. Browser timers may be delayed in background tabs. This is not a durable
+server scheduler, and no interpolation occurs between steps.
+
+The existing frontend poll reads each saved snapshot into the Zustand store.
+It polls once per second, so shorter intermediate states may not be observed.

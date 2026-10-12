@@ -1,7 +1,5 @@
 import { validateStateUpdate, type SimulationState } from '../simulation/simulationState'
 
-export type StateStep = { offsetMs: number; stateUpdate: SimulationState }
-
 type SequenceOptions = {
   signal: AbortSignal
   send: (state: SimulationState, signal: AbortSignal) => Promise<SimulationState>
@@ -19,17 +17,15 @@ function wait(milliseconds: number, signal: AbortSignal): Promise<void> {
   })
 }
 
-export async function runStateSequence(initial: SimulationState, steps: readonly StateStep[], options: SequenceOptions) {
-  if (!steps.length) throw new Error('Provide at least one state step.')
-  let previousOffset = -1
+export async function runStateSequence(initial: SimulationState, updates: ReadonlyMap<SimulationState, number>, options: SequenceOptions) {
+  if (!updates.size) throw new Error('Provide at least one state step.')
   // Validate and copy the whole sequence before sending any state.
-  const sequence = steps.map((step) => {
-    if (!Number.isSafeInteger(step.offsetMs) || step.offsetMs < 0 || step.offsetMs > 2147483647 || step.offsetMs < previousOffset) {
-      throw new Error('Offsets must be nonnegative integer milliseconds in ascending order (maximum 2147483647).')
+  const sequence = Array.from(updates, ([stateUpdate, offsetMs]) => {
+    if (!Number.isSafeInteger(offsetMs) || offsetMs < 0 || offsetMs > 2147483647) {
+      throw new Error('Offsets must be nonnegative integer milliseconds (maximum 2147483647).')
     }
-    previousOffset = step.offsetMs
-    return { offsetMs: step.offsetMs, stateUpdate: validateStateUpdate(step.stateUpdate) }
-  })
+    return { offsetMs: offsetMs, stateUpdate: validateStateUpdate(stateUpdate) }
+  }).sort((a, b) => a.offsetMs - b.offsetMs)
   const now = options.now ?? (() => performance.now())
   const pause = options.wait ?? wait
   const start = now()
