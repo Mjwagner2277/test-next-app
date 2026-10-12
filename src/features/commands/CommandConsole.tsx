@@ -5,6 +5,7 @@ import { Alert, Box, Button, Tab, Tabs, Typography } from '@mui/material'
 import type { SimulationState } from '../simulation/simulationState'
 import { COMMAND_TABS, INITIAL_COMPONENT_STATE } from './commandConfig'
 import { CommandButton } from './CommandButton'
+import { runStateSequence, type StateStep } from './runStateSequence'
 import { TabPanel } from './TabPanel'
 
 export function CommandConsole() {
@@ -15,6 +16,8 @@ export function CommandConsole() {
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [result, setResult] = useState<{ error: boolean; message: string } | null>(null)
   const inFlight = useRef(false)
+  const sequenceController = useRef<AbortController | null>(null)
+  useEffect(() => () => sequenceController.current?.abort(), [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -36,30 +39,35 @@ export function CommandConsole() {
     return () => controller.abort()
   }, [loadAttempt])
 
-  async function updateState(changes: SimulationState, buttonId: string) {
+  async function updateState(steps: readonly StateStep[], buttonId: string) {
     if (!ready || inFlight.current) return
     inFlight.current = true
-    const previousState = componentState
-    const nextState = { ...componentState, ...changes }
-    setComponentState(nextState)
+    const controller = new AbortController()
+    sequenceController.current = controller
     setPendingId(buttonId)
     setResult(null)
     try {
-      const response = await fetch('/api/simulation/state', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(nextState),
+      await runStateSequence(componentState, steps, {
+        signal: controller.signal,
+        send: async (nextState, signal) => {
+          const response = await fetch('/api/simulation/state', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nextState),
+            signal,
+          })
+          if (!response.ok) throw new Error('The server could not save this state update. Remaining steps were stopped.')
+          return response.json() as Promise<SimulationState>
+        },
+        onSaved: setComponentState,
       })
-      if (!response.ok) throw new Error('The server could not save this state update.')
-      const saved: SimulationState = await response.json()
-      setComponentState(saved)
-      setResult({ error: false, message: 'Simulation state updated.' })
+      setResult({ error: false, message: 'Simulation sequence completed.' })
     } catch (error) {
-      setComponentState(previousState)
-      setResult({ error: true, message: error instanceof Error ? error.message : 'Unable to update simulation state.' })
+      if (!controller.signal.aborted) setResult({ error: true, message: error instanceof Error ? error.message : 'Unable to update simulation state. Remaining steps were stopped.' })
     } finally {
       inFlight.current = false
-      setPendingId(null)
+      sequenceController.current = null
+      if (!controller.signal.aborted) setPendingId(null)
     }
   }
   return (

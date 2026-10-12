@@ -14,11 +14,11 @@ It starts with `INITIAL_COMPONENT_STATE` and loads saved server values before
 commands are enabled. Configure defaults in `commandConfig.ts`.
 
 Each button passes its field changes to the console's common handler. The handler
-builds `nextState = { ...componentState, ...changes }`, updates React state, and
-sends that complete object (not the old React state) in the PATCH request.
-Commands are disabled while saving to avoid overlapping updates. On failure the
-local change is rolled back; on success the server response becomes the shared
-state. The state survives switching tabs. Multiple browser operators sending full
+builds the next state object from the latest acknowledged state and field changes,
+then sends that complete object in the PATCH request.
+Commands are disabled while saving to avoid overlapping updates. On success the
+server response becomes the shared state; on failure the last acknowledged state
+is retained. The state survives switching tabs. Multiple browser operators sending full
 objects use last-write-wins semantics for overlapping fields.
 
 Configure a button with one or several fields to change:
@@ -86,3 +86,35 @@ Mount `useSimulationPolling()` once in the consuming page or shared layout. The
 store is shared by components within that browser app instance; the server API
 remains the shared source across browsers. The command console still owns its
 editable state object so polling does not overwrite a pending button update.
+
+## Timed movement sequences
+
+Use `sequence` instead of `stateUpdate` to send several states from one button:
+
+```ts
+{
+  id: 'move-x',
+  label: 'Move X',
+  sequence: [
+    { offsetMs: 0, stateUpdate: { mechanical_component_x: true, mechanical_component_position: 0 } },
+    { offsetMs: 1500, stateUpdate: { mechanical_component_position: 50 } },
+    { offsetMs: 3000, stateUpdate: { mechanical_component_x: false, mechanical_component_position: 100 } },
+  ],
+}
+```
+
+Offsets are integer milliseconds from the start of the sequence, in ascending
+order. Each step merges its fields into the latest acknowledged state object and
+sends the whole object. Requests run sequentially; a slow request delays overdue
+steps instead of allowing them to arrive out of order. Equal offsets run in listed
+order. Put fields in one step when they must change together. Existing
+`stateUpdate` buttons remain a single immediate step; `sequence` takes precedence
+if both are configured.
+
+All buttons remain disabled until the sequence finishes. A failed request stops
+the remaining steps and retains already acknowledged state. Leaving the commands
+page cancels pending waits and requests; an update already received by the server
+may still apply. Timing runs in the browser and can be delayed in background tabs;
+this is not a real-time or durable server scheduler. The Zustand viewer polls once
+per second, so short intermediate states may not be observed. No interpolation is
+performed between steps.

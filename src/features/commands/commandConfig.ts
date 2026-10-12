@@ -1,3 +1,4 @@
+import type { StateStep } from './runStateSequence'
 import type { SimulationState } from '../simulation/simulationState'
 
 export type CommandButtonDefinition = {
@@ -5,6 +6,7 @@ export type CommandButtonDefinition = {
   label: string
   description?: string
   stateUpdate?: SimulationState
+  sequence?: readonly StateStep[]
 }
 
 export type CommandTabDefinition = {
@@ -29,7 +31,14 @@ export const COMMAND_TABS: readonly CommandTabDefinition[] = [
     buttons: [
       { id: 'a-1', label: 'Enable X', stateUpdate: { mechanical_component_x: true } },
       { id: 'a-2', label: 'Disable X', stateUpdate: { mechanical_component_x: false } },
-      { id: 'a-3', label: 'Command A3' },
+      {
+        id: 'a-3', label: 'Move X',
+        sequence: [
+          { offsetMs: 0, stateUpdate: { mechanical_component_x: true, mechanical_component_position: 0 } },
+          { offsetMs: 1500, stateUpdate: { mechanical_component_position: 50 } },
+          { offsetMs: 3000, stateUpdate: { mechanical_component_x: false, mechanical_component_position: 100 } },
+        ],
+      },
       { id: 'a-4', label: 'Command A4' },
     ],
   },
