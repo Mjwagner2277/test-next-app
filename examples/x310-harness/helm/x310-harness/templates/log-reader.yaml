@@ -1,0 +1,36 @@
+{{- if .Values.serviceAccount.create }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "x310.serviceAccount" . }}
+  namespace: {{ .Release.Namespace | quote }}
+{{- end }}
+{{- if .Values.rbac.create }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "x310.name" . }}
+  namespace: {{ default .Release.Namespace .Values.logs.namespace | quote }}
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["list"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "x310.name" . }}
+  namespace: {{ default .Release.Namespace .Values.logs.namespace | quote }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "x310.serviceAccount" . }}
+    namespace: {{ .Release.Namespace | quote }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "x310.name" . }}
+{{- end }}

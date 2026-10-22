@@ -1,0 +1,6 @@
+/x310-harness
+/bin/
+/artifacts/
+*.test
+coverage.out
+.DS_Store

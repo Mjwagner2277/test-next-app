@@ -1,0 +1,90 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "x310.name" . }}
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: {{ .Values.activeDeadlineSeconds }}
+  ttlSecondsAfterFinished: {{ .Values.ttlSecondsAfterFinished }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: x310-harness
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "x310.serviceAccount" . }}
+      automountServiceAccountToken: true
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: harness
+          image: {{ printf "%s:%s" .Values.image.repository .Values.image.tag | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: X310_LISTEN
+              value: ":8310"
+            - name: HEALTH_ENDPOINT
+              value: {{ required "uut.healthEndpoint (or legacy uut.endpoint) is required" (default .Values.uut.endpoint .Values.uut.healthEndpoint) | quote }}
+            - name: ALERT_ENDPOINT
+              value: {{ default (default .Values.uut.endpoint .Values.uut.healthEndpoint) .Values.uut.alertEndpoint | quote }}
+            - name: ALERT_ID
+              value: {{ required "uut.alertID is required" .Values.uut.alertID | quote }}
+            - name: HEALTH_ID
+              value: {{ required "uut.healthID is required" .Values.uut.healthID | quote }}
+            - name: LOG_NAMESPACE
+              value: {{ default .Release.Namespace .Values.logs.namespace | quote }}
+            - name: LOG_SELECTOR
+              value: {{ .Values.logs.selector | quote }}
+            - name: LOG_OUTPUT_DIR
+              value: /artifacts
+            - name: LOG_POD
+              value: {{ required "logs.pod is required" .Values.logs.pod | quote }}
+            - name: LOG_CONTAINER
+              value: {{ required "logs.container is required" .Values.logs.container | quote }}
+            - name: LOG_QUIET_WINDOW
+              value: {{ .Values.logs.quietWindow | quote }}
+            - name: SETUP_TIMEOUT
+              value: {{ .Values.timeouts.setup | quote }}
+            - name: STEP_TIMEOUT
+              value: {{ .Values.timeouts.step | quote }}
+            - name: RUN_TIMEOUT
+              value: {{ .Values.timeouts.run | quote }}
+          volumeMounts:
+            - name: log-artifacts
+              mountPath: /artifacts
+          ports:
+            - name: http
+              containerPort: 8310
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 1
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: log-artifacts
+          {{- if .Values.logs.existingClaim }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.logs.existingClaim | quote }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}

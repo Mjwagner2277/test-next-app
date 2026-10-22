@@ -1,0 +1,14 @@
+# A normal release resource: DNS exists before helm test starts the Job.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "x310.name" . }}
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: x310-harness
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+  ports:
+    - name: http
+      port: 8310
+      targetPort: http

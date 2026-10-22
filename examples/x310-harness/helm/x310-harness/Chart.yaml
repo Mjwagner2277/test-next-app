@@ -1,0 +1,6 @@
+apiVersion: v2
+name: x310-harness
+description: X-310 polling and gRPC observation Helm test harness
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

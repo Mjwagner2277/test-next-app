@@ -1,0 +1,41 @@
+image:
+  repository: x310-harness
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+uut:
+  endpoint: "uut:50051" # Legacy fallback; must point to the health server.
+  healthEndpoint: "" # Set to the server receiving the UUT's 1 Hz health pushes.
+  alertEndpoint: "" # Defaults to the health endpoint; separate alert interface.
+  alertID: "x310-alert"
+  healthID: "x310-health"
+timeouts:
+  setup: "15s"
+  step: "30s" # Bounds health/alert delivery, clearing and log checks.
+  run: "20m"
+# Must exceed the application run deadline plus shutdown time.
+activeDeadlineSeconds: 1260
+ttlSecondsAfterFinished: 86400
+resources:
+  requests:
+    cpu: 100m
+    memory: 32Mi
+  limits:
+    cpu: "1"
+    memory: 128Mi
+
+# Leave name empty to create a dedicated account. Set create=false and name to
+# use an existing account; disable rbac.create if permissions are managed elsewhere.
+serviceAccount:
+  create: true
+  name: ""
+rbac:
+  create: true
+logs:
+  namespace: "" # Defaults to the release namespace; must already exist.
+  selector: "" # Empty collects all pods in the namespace.
+  pod: "" # Required: pod used for item-specific assertions.
+  container: "" # Required: container used for item-specific assertions.
+  quietWindow: "1s"
+  existingClaim: "" # Optional PVC for logs.json/logs.txt; otherwise ephemeral.
+  # Message expectations are defined in the harness Go code.
